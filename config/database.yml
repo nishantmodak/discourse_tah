@@ -4,6 +4,8 @@ development:
   min_messages: warning
   pool: 5
   timeout: 5000
+  username: postgres
+  password: password
   host_names:
     ### Don't include the port number here. Change the "port" site setting instead, at /admin/site_settings.
     ### If you change this setting you will need to
@@ -20,6 +22,8 @@ test:
   min_messages: warning
   pool: 5
   timeout: 5000
+  username: postgres
+  password: password
   host_names:
     - test.localhost
 
@@ -30,6 +34,8 @@ profile:
   min_messages: warning
   pool: 5
   timeout: 5000
+  username: postgres
+  password: password
   host_names:
     - "localhost"
 
@@ -38,3 +44,18 @@ profile:
 #
 # 1. we need to support blank settings correctly and rendering nothing in yaml/erb is a PITA
 # 2. why go from object -> yaml -> object, pointless
+
+production:
+  adapter: postgresql
+  database: discourse_production
+  min_messages: warning
+  pool: 5
+  timeout: 5000
+  username: postgres
+  password: 
+  host_names:
+    ### Don't include the port number here. Change the "port" site setting instead, at /admin/site_settings.
+    ### If you change this setting you will need to
+    ###   - restart sidekiq if you change this setting
+    ###   - rebake all to posts using: `RAILS_ENV=production bundle exec rake posts:rebake`
+    - "localhost"
