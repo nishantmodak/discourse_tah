@@ -8,7 +8,7 @@ class TopicsBulkAction
   end
 
   def self.operations
-    %w(change_category close change_notification_level reset_read dismiss_posts)
+    %w(change_category close archive change_notification_level reset_read dismiss_posts delete)
   end
 
   def perform!
@@ -61,6 +61,21 @@ class TopicsBulkAction
       end
     end
 
+    def archive
+      topics.each do |t|
+        if guardian.can_moderate?(t)
+          t.update_status('archived', true, @user)
+          @changed_ids << t.id
+        end
+      end
+    end
+
+    def delete
+      topics.each do |t|
+        t.trash! if guardian.can_delete?(t)
+      end
+    end
+
     def guardian
       @guardian ||= Guardian.new(@user)
     end
@@ -68,6 +83,7 @@ class TopicsBulkAction
     def topics
       @topics ||= Topic.where(id: @topic_ids)
     end
+
 
 end
 

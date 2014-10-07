@@ -48,23 +48,24 @@ body {
   }
 
   .coldmap-high {
-    color: scale-color($tertiary, $lightness: 40%) !important;
+    color: #91CDF5 !important;
   }
   .coldmap-med {
-    color: $tertiary !important;
+    color: #91CDF5 !important;
   }
   .coldmap-low {
-    color: scale-color($tertiary, $lightness: -10%) !important;
+    color: #91AFD2 !important;
   }
   .heatmap-high {
-    color: scale-color($danger, $lightness: 30%) !important;
+    color: #fe7a15 !important;
   }
   .heatmap-med {
-    color: $danger  !important;
+    color: #cf7721 !important;
   }
   .heatmap-low {
-    color: darken($danger, 10%) !important;
+    color: #9b764f !important;
   }
+
   #loading-message {
     position: absolute;
     font-size: 30px;
@@ -139,23 +140,17 @@ body {
 }
 
 .spinner {
-  width: 100px;
-  margin: 10px auto 30px auto;
-  background-color: #000;
-  @include border-radius-all(10px);
-  padding: 10px 10px 10px 30px;
-  font-size: 15px;
-  line-height: 23px;
-  text-align: center;
-  color: $secondary;
+  width: 20px;
+  margin: 0 auto;
+  padding: 25px 15px;
   background: {
-    image: image-url("spinner_96_w.gif");
+    image: image-url("spinner_96.gif");
     repeat: no-repeat;
-    position: 10px 8px;
-    size: 25px;
+    size: 50px;
   };
   -webkit-animation: spinner .25s;
   animation: spinner .25s;
+  margin-top: 10px;
 }
 
 //loading spinner fade-in
@@ -183,4 +178,14 @@ body {
   color: $secondary;
   background: $success;
   &.badge-notification[href] {color: $secondary;}
+}
+
+.fade {
+  opacity: 0;
+  -webkit-transition: opacity 0.15s linear;
+  transition: opacity 0.15s linear;
+}
+
+.fade.in {
+  opacity: 1;
 }

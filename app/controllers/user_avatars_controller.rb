@@ -52,25 +52,26 @@ class UserAvatarsController < ApplicationController
 
     image = nil
     version = params[:version].to_i
-
     return render_dot unless version > 0 && user_avatar = user.user_avatar
 
     upload = Upload.find_by(id: version) if user_avatar.contains_upload?(version)
     upload ||= user.uploaded_avatar if user.uploaded_avatar_id == version
 
     if user.uploaded_avatar && !upload
-      return redirect_to "/avatar/#{hostname}/#{user.username_lower}/#{size}/#{user.uploaded_avatar_id}.png"
+      return redirect_to "/user_avatar/#{hostname}/#{user.username_lower}/#{size}/#{user.uploaded_avatar_id}.png"
     elsif upload
       original = Discourse.store.path_for(upload)
       if Discourse.store.external? || File.exists?(original)
         optimized = get_optimized_image(upload, size)
 
-        if Discourse.store.external?
-          expires_in 1.day, public: true
-          return redirect_to optimized.url
-        end
+        if optimized
+          if Discourse.store.external?
+            expires_in 1.day, public: true
+            return redirect_to optimized.url
+          end
 
-        image = Discourse.store.path_for(optimized)
+          image = Discourse.store.path_for(optimized)
+        end
       end
     end
 
@@ -82,7 +83,6 @@ class UserAvatarsController < ApplicationController
       render_dot
     end
   end
-
 
   # this protects us from a DoS
   def render_dot

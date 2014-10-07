@@ -50,18 +50,19 @@ class PostSerializer < BasicPostSerializer
              :can_view_edit_history,
              :wiki,
              :user_custom_fields,
-             :static_doc
+             :static_doc,
+             :via_email
 
   def moderator?
-    !!(object.user && object.user.moderator?)
+    !!(object.try(:user).try(:moderator?))
   end
 
   def admin?
-    !!(object.user && object.user.admin?)
+    !!(object.try(:user).try(:admin?))
   end
 
   def staff?
-    !!(object.user && object.user.staff?)
+    !!(object.try(:user).try(:staff?))
   end
 
   def yours
@@ -118,11 +119,11 @@ class PostSerializer < BasicPostSerializer
   end
 
   def user_title
-    object.user.try(:title)
+    object.try(:user).try(:title)
   end
 
   def trust_level
-    object.user.try(:trust_level)
+    object.try(:user).try(:trust_level)
   end
 
   def reply_to_user
@@ -243,6 +244,10 @@ class PostSerializer < BasicPostSerializer
 
   def include_static_doc?
     object.post_number == 1 && Discourse.static_doc_topic_ids.include?(object.topic_id)
+  end
+
+  def include_via_email?
+    object.via_email?
   end
 
   private

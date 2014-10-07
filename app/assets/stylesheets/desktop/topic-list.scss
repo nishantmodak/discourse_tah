@@ -68,6 +68,9 @@
     &:nth-child(odd) {
         background-color: $secondary;
     }
+    &.highlighted {
+      background-color: scale-color($tertiary, $lightness: 85%);
+    }
   }
   button.bulk-select {
     padding: 0;
@@ -94,7 +97,12 @@
   .badge-notification {
     position: relative;
     top: -2px;
+    &.new-topic {
+      top: 0px;
+      padding-left: 5px;
+    }
   }
+
   .category {
     padding: 0 20px 0 20px;
     min-width: 80px;
@@ -115,7 +123,7 @@
     }
   }
   .avatar {
-    &.latest {
+    &.latest:not(.single) {
       @include box-shadow(0 0 6px 1px desaturate(scale-color($tertiary, $lightness: 30%), 35%));
     }
   }
@@ -138,6 +146,9 @@
   }
   .activity {
     width: 60px;
+    span {
+      cursor: pointer;
+    }
   }
   .age {
     width: 60px;
@@ -373,11 +384,10 @@ and (max-width : 850px) {
     .topic-excerpt {
       padding-right: 20px;
       }
-  th.posters {
-    text-align: center;
-    }
-     .posters {
-
+    th.posters {
+      text-align: center;
+      }
+    .posters {
        min-width: 0;
        width: 50px;
        a:not(.latest) {

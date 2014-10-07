@@ -9,7 +9,8 @@
 **/
 var _validClasses = {},
     _validIframes = [],
-    _validTags = {};
+    _validTags = {},
+    _decoratedCaja = false;
 
 function validateAttribute(tagName, attribName, value) {
   var tag = _validTags[tagName];
@@ -165,7 +166,7 @@ Discourse.Markdown = {
     var url = typeof(uri) === "string" ? uri : uri.toString();
 
     // escape single quotes
-    url = url.replace(/'/g, "&#39;");
+    url = url.replace(/'/g, "%27");
 
     // whitelist some iframe only
     if (hints && hints.XML_TAG === "iframe" && hints.XML_ATTR === "src") {
@@ -197,6 +198,20 @@ Discourse.Markdown = {
 
     // Allow things like <3 and <_<
     text = text.replace(/<([^A-Za-z\/\!]|$)/g, "&lt;$1");
+
+    // The first time, let's add some more whitelisted tags
+    if (!_decoratedCaja) {
+
+      // Add anything whitelisted to the list of elements if it's not in there
+      // already.
+      var elements = window.html4.ELEMENTS;
+      Object.keys(_validTags).forEach(function(t) {
+        if (!elements[t]) {
+          elements[t] = 0;
+        }
+      });
+      _decoratedCaja = true;
+    }
 
     return window.html_sanitize(text, Discourse.Markdown.urlAllowed, validateAttribute);
   },

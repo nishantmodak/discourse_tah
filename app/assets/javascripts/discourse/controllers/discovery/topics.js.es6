@@ -1,20 +1,16 @@
-/**
-  The controller for displaying a list of topics.
+import DiscoveryController from 'discourse/controllers/discovery';
+import { queryParams } from 'discourse/controllers/discovery-sortable';
 
-  @class DiscoveryTopicsController
-  @extends Discourse.Controller
-  @namespace Discourse
-  @module Discourse
-**/
-export default Discourse.DiscoveryController.extend({
+var controllerOpts = {
   needs: ['discovery'],
   bulkSelectEnabled: false,
   selected: [],
+  period: null,
+
+  redirectedReason: Em.computed.alias('currentUser.redirected_to_top_reason'),
 
   order: 'default',
   ascending: false,
-  status: null,
-  search: null,
 
   actions: {
 
@@ -126,6 +122,7 @@ export default Discourse.DiscoveryController.extend({
   showTable: Em.computed.or('hasTopics', 'topicTrackingState.hasIncoming'),
   allLoaded: Em.computed.empty('more_topics_url'),
   latest: Discourse.computed.endWith('filter', 'latest'),
+  new: Discourse.computed.endWith('filter', 'new'),
   top: Em.computed.notEmpty('period'),
   yearly: Em.computed.equal('period', 'yearly'),
   monthly: Em.computed.equal('period', 'monthly'),
@@ -152,7 +149,28 @@ export default Discourse.DiscoveryController.extend({
     }
   }.property('allLoaded', 'topics.length'),
 
+  footerEducation: function() {
+    if (!this.get('allLoaded') || this.get('topics.length') > 0 || !Discourse.User.current()) { return; }
+
+    var split = this.get('filter').split('/');
+
+    if (split[0] !== 'new' && split[0] !== 'unread' && split[0] !== 'starred') { return; }
+
+    return I18n.t("topics.none.educate." + split[0], {
+      userPrefsUrl: Discourse.getURL("/users/") + (Discourse.User.currentProp("username_lower")) + "/preferences"
+    });
+  }.property('allLoaded', 'topics.length'),
+
   loadMoreTopics: function() {
     return this.get('model').loadMore();
   }
+};
+
+Ember.keys(queryParams).forEach(function(p) {
+  // If we don't have a default value, initialize it to null
+  if (typeof controllerOpts[p] === 'undefined') {
+    controllerOpts[p] = null;
+  }
 });
+
+export default DiscoveryController.extend(controllerOpts);

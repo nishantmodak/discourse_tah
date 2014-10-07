@@ -10,6 +10,8 @@ var acceptableCodeClasses =
    "profile", "python", "r", "rib", "rsl", "ruby", "rust", "scala", "smalltalk", "sql", "tex", "text",
    "vala", "vbscript", "vhdl"];
 
+var textCodeClasses = ["text", "pre"];
+
 function flattenBlocks(blocks) {
   var result = "";
   blocks.forEach(function(b) {
@@ -21,14 +23,19 @@ function flattenBlocks(blocks) {
 
 Discourse.Dialect.replaceBlock({
   start: /^`{3}([^\n\[\]]+)?\n?([\s\S]*)?/gm,
-  stop: '```',
+  stop: /^```$/gm,
   emitter: function(blockContents, matches) {
 
     var klass = Discourse.SiteSettings.default_code_lang;
     if (matches[1] && acceptableCodeClasses.indexOf(matches[1]) !== -1) {
       klass = matches[1];
     }
-    return ['p', ['pre', ['code', {'class': klass}, flattenBlocks(blockContents) ]]];
+
+    if (textCodeClasses.indexOf(matches[1]) !== -1) {
+      return ['p', ['pre', ['code', flattenBlocks(blockContents) ]]];
+    } else  {
+      return ['p', ['pre', ['code', {'class': klass}, flattenBlocks(blockContents) ]]];
+    }
   }
 });
 
@@ -54,7 +61,7 @@ Discourse.Dialect.on('parseNode', function (event) {
 
 Discourse.Dialect.replaceBlock({
   start: /(<pre[^\>]*\>)([\s\S]*)/igm,
-  stop: '</pre>',
+  stop: /<\/pre>/igm,
   rawContents: true,
   skipIfTradtionalLinebreaks: true,
 

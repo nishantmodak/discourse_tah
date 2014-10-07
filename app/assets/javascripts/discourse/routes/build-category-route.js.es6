@@ -9,7 +9,7 @@ export default function(filter, params) {
       return Discourse.Category.findBySlug(modelParams.slug, modelParams.parentSlug);
     },
 
-    afterModel: function(model, transaction) {
+    afterModel: function(model, transition) {
       if (!model) {
         this.replaceWith('/404');
         return;
@@ -17,7 +17,7 @@ export default function(filter, params) {
 
       this._setupNavigation(model);
       return Em.RSVP.all([this._createSubcategoryList(model),
-                          this._retrieveTopicList(model, transaction)]);
+                          this._retrieveTopicList(model, transition)]);
     },
 
     _setupNavigation: function(model) {
@@ -28,7 +28,7 @@ export default function(filter, params) {
         category: model,
         filterMode: filterMode,
         noSubcategories: params && params.no_subcategories,
-        canEditCategory: Discourse.User.currentProp('staff'),
+        canEditCategory: model.get('can_edit'),
         canChangeCategoryNotificationLevel: Discourse.User.current()
       });
     },
@@ -46,19 +46,14 @@ export default function(filter, params) {
       return Em.RSVP.resolve();
     },
 
-    _retrieveTopicList: function(model, transaction) {
+    _retrieveTopicList: function(model, transition) {
       var listFilter = "category/" + Discourse.Category.slugFor(model) + "/l/" + filter,
           self = this;
 
-      var findOpts = filterQueryParams(transaction.queryParams, params);
+      var findOpts = filterQueryParams(transition.queryParams, params),
+          extras = { cached: this.isPoppedState(transition) };
 
-      return Discourse.TopicList.list(listFilter, findOpts).then(function(list) {
-        var tracking = Discourse.TopicTrackingState.current();
-        if (tracking) {
-          tracking.sync(list, listFilter);
-          tracking.trackIncoming(listFilter);
-        }
-
+      return Discourse.TopicList.list(listFilter, findOpts, extras).then(function(list) {
         // If all the categories are the same, we can hide them
         var hideCategory = !list.get('topics').find(function (t) { return t.get('category') !== model; });
         list.set('hideCategory', hideCategory);
@@ -68,16 +63,17 @@ export default function(filter, params) {
 
     setupController: function(controller, model) {
       var topics = this.get('topics'),
-          period = filter.indexOf('/') > 0 ? filter.split('/')[1] : '',
+          periods = this.controllerFor('discovery').get('periods'),
+          periodId = topics.get('for_period') || (filter.indexOf('/') > 0 ? filter.split('/')[1] : ''),
           filterText = I18n.t('filters.' + filter.replace('/', '.') + '.title', {count: 0});
 
-      Discourse.set('title', I18n.t('filters.with_category', { filter: filterText, category: model.get('name').capitalize() }));
+      Discourse.set('title', I18n.t('filters.with_category', { filter: filterText, category: model.get('name') }));
 
       this.controllerFor('navigation/category').set('canCreateTopic', topics.get('can_create_topic'));
       this.controllerFor('discovery/topics').setProperties({
         model: topics,
         category: model,
-        period: period,
+        period: periods.findBy('id', periodId),
         selected: [],
         noSubcategories: params && !!params.no_subcategories
       });

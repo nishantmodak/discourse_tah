@@ -8,10 +8,11 @@
 //= require highlight.pack.js
 
 // Stuff we need to load first
+//= require ./discourse/lib/computed
 //= require ./discourse/mixins/scrolling
 //= require_tree ./discourse/mixins
 //= require ./discourse/lib/markdown
-//= require ./discourse/lib/computed
+//= require ./discourse/lib/search-for-term
 //= require ./discourse/views/view
 //= require ./discourse/views/container
 //= require ./discourse/lib/debounce
@@ -19,8 +20,10 @@
 //= require ./discourse/models/user_action
 //= require ./discourse/models/composer
 //= require ./discourse/models/topic
+//= require ./discourse/models/top-period
 //= require ./discourse/controllers/controller
-//= require ./discourse/controllers/object_controller
+//= require ./discourse/controllers/discovery-sortable
+//= require ./discourse/controllers/object
 //= require ./discourse/controllers/navigation/default
 //= require ./discourse/views/modal_body_view
 //= require ./discourse/views/flag
@@ -33,7 +36,10 @@
 //= require ./discourse/routes/discourse_route
 //= require ./discourse/routes/build-topic-route
 //= require ./discourse/routes/discourse_restricted_user_route
+//= require ./discourse/components/top-title
 //= require ./discourse/components/text-field
+//= require ./discourse/helpers/user-avatar
+//= require ./discourse/helpers/cold-age-class
 
 //= require ./discourse/dialects/dialect
 //= require_tree ./discourse/dialects

@@ -48,7 +48,7 @@ class Topic < ActiveRecord::Base
   rate_limit :limit_topics_per_day
   rate_limit :limit_private_messages_per_day
 
-  validates :title, :if => Proc.new { |t| t.title_changed? },
+  validates :title, :if => Proc.new { |t| t.new_record? || t.title_changed? },
                     :presence => true,
                     :topic_title_length => true,
                     :quality_title => { :unless => :private_message? },
@@ -100,6 +100,7 @@ class Topic < ActiveRecord::Base
   has_many :invites, through: :topic_invites, source: :invite
 
   has_many :revisions, foreign_key: :topic_id, class_name: 'TopicRevision'
+  has_one :warning
 
   # When we want to temporarily attach some data to a forum topic (usually before serialization)
   attr_accessor :user_data
@@ -142,7 +143,7 @@ class Topic < ActiveRecord::Base
   # Helps us limit how many topics can be starred in a day
   class StarLimiter < RateLimiter
     def initialize(user)
-      super(user, "starred:#{Date.today.to_s}", SiteSetting.max_stars_per_day, 1.day.to_i)
+      super(user, "starred:#{Date.today}", SiteSetting.max_stars_per_day, 1.day.to_i)
     end
   end
 
@@ -512,6 +513,8 @@ class Topic < ActiveRecord::Base
   end
 
   def change_category_to_id(category_id)
+    return false if private_message?
+
     # If the category name is blank, reset the attribute
     if (category_id.nil? || category_id.to_i == 0)
       cat = Category.find_by(id: SiteSetting.uncategorized_category_id)
@@ -525,15 +528,15 @@ class Topic < ActiveRecord::Base
   end
 
   def remove_allowed_user(username)
-    user = User.find_by(username: username)
-    if user
+    if user = User.find_by(username: username)
       topic_user = topic_allowed_users.find_by(user_id: user.id)
       if topic_user
         topic_user.destroy
-      else
-        false
+        return true
       end
     end
+
+    false
   end
 
   # Invite a user to the topic by username or email. Returns success/failure
@@ -575,7 +578,7 @@ class Topic < ActiveRecord::Base
   end
 
   def max_post_number
-    posts.maximum(:post_number).to_i
+    posts.with_deleted.maximum(:post_number).to_i
   end
 
   def move_posts(moved_by, post_ids, opts)
@@ -834,7 +837,7 @@ class Topic < ActiveRecord::Base
   end
 
   def apply_per_day_rate_limit_for(key, method_name)
-    RateLimiter.new(user, "#{key}-per-day:#{Date.today.to_s}", SiteSetting.send(method_name), 1.day.to_i)
+    RateLimiter.new(user, "#{key}-per-day:#{Date.today}", SiteSetting.send(method_name), 1.day.to_i)
   end
 
 end
@@ -846,8 +849,8 @@ end
 #  id                      :integer          not null, primary key
 #  title                   :string(255)      not null
 #  last_posted_at          :datetime
-#  created_at              :datetime
-#  updated_at              :datetime
+#  created_at              :datetime         not null
+#  updated_at              :datetime         not null
 #  views                   :integer          default(0), not null
 #  posts_count             :integer          default(0), not null
 #  user_id                 :integer

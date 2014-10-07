@@ -1,12 +1,6 @@
 // A helper to build a topic route for a filter
 
-export var queryParams = {
-  sort: { replace: true },
-  ascending: { replace: true },
-  status: { replace: true },
-  state: { replace: true },
-  search: { replace: true }
-};
+import { queryParams } from 'discourse/controllers/discovery-sortable';
 
 export function filterQueryParams(params, defaultParams) {
   var findOpts = defaultParams || {};
@@ -18,7 +12,8 @@ export function filterQueryParams(params, defaultParams) {
   return findOpts;
 }
 
-export default function(filter) {
+export default function(filter, extras) {
+  extras = extras || {};
   return Discourse.Route.extend({
     queryParams: queryParams,
 
@@ -26,20 +21,15 @@ export default function(filter) {
       this.controllerFor('navigation/default').set('filterMode', filter);
     },
 
-    model: function(data, transaction) {
+    model: function(data, transition) {
 
       // attempt to stop early cause we need this to be called before .sync
       Discourse.ScreenTrack.current().stop();
 
-      var findOpts = filterQueryParams(transaction.queryParams);
-      return Discourse.TopicList.list(filter, findOpts).then(function(list) {
-        var tracking = Discourse.TopicTrackingState.current();
-        if (tracking) {
-          tracking.sync(list, filter);
-          tracking.trackIncoming(filter);
-        }
-        return list;
-      });
+      var findOpts = filterQueryParams(transition.queryParams),
+          extras = { cached: this.isPoppedState(transition) };
+
+      return Discourse.TopicList.list(filter, findOpts, extras);
     },
 
     setupController: function(controller, model, trans) {
@@ -48,7 +38,8 @@ export default function(filter) {
         return 'queryParams.' + v;
       })));
 
-      var period = filter.indexOf('/') > 0 ? filter.split('/')[1] : '',
+      var periods = this.controllerFor('discovery').get('periods'),
+          periodId = model.get('for_period') || (filter.indexOf('/') > 0 ? filter.split('/')[1] : ''),
           filterText = I18n.t('filters.' + filter.replace('/', '.') + '.title', {count: 0});
 
       if (filter === Discourse.Utilities.defaultHomepage()) {
@@ -60,12 +51,11 @@ export default function(filter) {
       this.controllerFor('discovery/topics').setProperties({
         model: model,
         category: null,
-        period: period,
+        period: periods.findBy('id', periodId),
         selected: []
       });
 
       this.openTopicDraft(model);
-
       this.controllerFor('navigation/default').set('canCreateTopic', model.get('can_create_topic'));
     },
 
@@ -73,6 +63,6 @@ export default function(filter) {
       this.render('navigation/default', { outlet: 'navigation-bar' });
       this.render('discovery/topics', { controller: 'discovery/topics', outlet: 'list-container' });
     }
-  });
+  }, extras);
 }
 

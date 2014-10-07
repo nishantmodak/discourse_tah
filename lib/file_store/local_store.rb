@@ -14,11 +14,6 @@ module FileStore
       store_file(file, path)
     end
 
-    def store_avatar(file, avatar, size)
-      path = get_path_for_avatar(file, avatar, size)
-      store_file(file, path)
-    end
-
     def remove_upload(upload)
       remove_file(upload.url)
     end
@@ -62,7 +57,7 @@ module FileStore
     private
 
     def get_path_for_upload(file, upload)
-      unique_sha1 = Digest::SHA1.hexdigest("#{Time.now.to_s}#{upload.original_filename}")[0..15]
+      unique_sha1 = Digest::SHA1.hexdigest("#{Time.now}#{upload.original_filename}")[0..15]
       extension = File.extname(upload.original_filename)
       clean_name = "#{unique_sha1}#{extension}"
       # path
@@ -78,10 +73,6 @@ module FileStore
       ].join
       # path
       "#{relative_base_url}/_optimized/#{optimized_image.sha1[0..2]}/#{optimized_image.sha1[3..5]}/#{filename}"
-    end
-
-    def get_path_for_avatar(file, avatar, size)
-      relative_avatar_template(avatar).gsub("{size}", size.to_s)
     end
 
     def relative_avatar_template(avatar)

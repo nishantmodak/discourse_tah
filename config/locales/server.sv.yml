@@ -67,7 +67,6 @@ sv:
       trust_level_2: "trust_level_2"
       trust_level_3: "trust_level_3"
       trust_level_4: "trust_level_4"
-      trust_level_5: "trust_level_5"
   education:
     until_posts:
       one: "1 inlägg"
@@ -101,12 +100,6 @@ sv:
       title: "besökare"
     basic:
       title: "vanlig användare"
-    regular:
-      title: "regelbunden användare"
-    leader:
-      title: "ledare"
-    elder:
-      title: "församlingsäldste"
   rate_limiter:
     too_many_requests: "Du gör det där för ofta. Var god vänta %{time_left} innan du försöker igen."
     hours:
@@ -216,9 +209,7 @@ sv:
       long_form: 'flagga detta som olämpligt'
     notify_user:
       title: 'Notifiera {{username}}'
-      description: 'Det här inlägget innehåller något som jag vill tala direkt och privat med den här personen om.'
       long_form: 'notifierad användare'
-      email_title: 'Angående din post i "%{title}"'
       email_body: "%{link}\n\n%{message}"
     notify_moderators:
       title: 'Notifiera moderatorer'
@@ -237,8 +228,6 @@ sv:
       title: 'Rösta'
       description: 'Rösta för detta inlägg'
       long_form: 'röstade för detta inlägg'
-  flagging:
-    user_must_edit: '<p>Flaggat innehåll dolt.</p>'
   archetypes:
     regular:
       title: "Vanlig Tråd"
@@ -344,9 +333,6 @@ sv:
     education_new_topic:
       title: "New User Education: First Topics"
       description: "Pop up just-in-time guidance automatically displayed above the composer when new users begin typing their first two new topics."
-    usage_tips:
-      title: "New User Tips"
-      description: "Common usage tips, essential forum information, and key guidance intended for new users."
     welcome_user:
       title: "Välkommen: Ny användare"
       description: "A private message automatically sent to all new users when they sign up."
@@ -356,10 +342,6 @@ sv:
     login_required_welcome_message:
       title: "Inloggning krävs: Välkomstmeddelande"
       description: "Välkomstmeddelande som visas för utloggade användare när inställningen för 'inloggning krävs' är aktiv. "
-    tos_user_content_license:
-      title: "Användarvillkor: Innehållslicens"
-    tos_miscellaneous:
-      title: "Användarvillkor: Diverse"
     login_required:
       title: "Inloggning krävs: Huvudsida"
     top:
@@ -372,7 +354,6 @@ sv:
     queue_jobs: "Köa diverse jobb i sidekiq, om urkryssat så körs köer infogat"
     favicon_url: "En favicon för till webbplats, se http://en.wikipedia.org/wiki/Favicon"
     apple_touch_icon_url: "Ikon som används för Apples touch-enheter. Rekommenderad storlek är 144*144 pixlar."
-    enable_private_messages: "Allow basic (1) trust level users to create private messages and reply to private messages"
     enable_long_polling: "Message bus used for notification can use long polling"
     long_polling_interval: "Interval before a new long poll is issued in milliseconds "
     polling_interval: "How often should logged in user clients poll in milliseconds"
@@ -385,7 +366,6 @@ sv:
     notify_mods_when_user_blocked: "Om en användare blockeras automatiskt, skicka ett meddelande till alla moderatorer."
     post_menu: "Determine which items appear on the post menu, and in what order. Example like|edit|flag|delete|share|bookmark|reply"
     track_external_right_clicks: "Track external links that are right clicked (eg: open in new tab) disabled by default because it rewrites URLs"
-    version_checks: "Ping the Discourse Hub for version updates and show version messages on the /admin dashboard"
     port: "DEVELOPER ONLY! WARNING! Use this HTTP port rather than the default of port 80. Leave blank for default of 80."
     force_hostname: "DEVELOPER ONLY! WARNING! Specify a hostname in the URL. Leave blank for default."
     invite_expiry_days: "How long user invitation keys are valid, in days"
@@ -436,14 +416,11 @@ sv:
     closed_disabled: "This topic is now opened. New replies are allowed."
     autoclosed_disabled: "Den här tråden är nu öppen. Nya svar är tillåtna."
     pinned_disabled: "This topic is now unpinned. It will no longer appear at the top of its category."
-    visible_enabled: "This topic is now visible. It will be displayed in topic lists."
-    visible_disabled: "This topic is now invisible. It will no longer be displayed in any topic lists. The only way to access this topic is via direct link."
   login:
     not_approved: "Your account hasn't been approved yet. You will be notified by email when you are ready to log in."
     incorrect_username_email_or_password: "Incorrect username, email or password"
     wait_approval: "Thanks for signing up. We will notify you when your account has been approved."
     active: "Your account is active and ready."
-    activate_email: "You're almost done! We sent an activation email to <b>%{email}</b>. Please follow the instructions in the email to activate your account."
     not_activated: "You can't log in yet. We sent an activation email to you. Please follow the instructions in the email to activate your account."
     suspended: "Du kan inte logga in förrän %{date}."
     suspended_with_reason: "Du kan inte logga in förrän %{date}. Anledningen att du blev avstängd: %{reason}"

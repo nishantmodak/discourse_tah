@@ -22,6 +22,7 @@ module Email
     end
 
     def send
+      return if SiteSetting.disable_emails
       return skip(I18n.t('email_log.message_blank')) if @message.blank?
       return skip(I18n.t('email_log.message_to_blank')) if @message.to.blank?
 
@@ -92,6 +93,12 @@ module Email
       @message.header['X-Discourse-Topic-Id'] = nil
       @message.header['X-Discourse-Post-Id'] = nil
       @message.header['X-Discourse-Reply-Key'] = nil
+
+      # Suppress images from short emails
+      if SiteSetting.strip_images_from_short_emails && @message.html_part.body.to_s.bytesize <= SiteSetting.short_email_length && @message.html_part.body =~ /<img[^>]+>/
+        style = Email::Styles.new(@message.html_part.body.to_s)
+        @message.html_part.body = style.strip_avatars_and_emojis
+      end
 
       begin
         @message.deliver

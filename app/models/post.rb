@@ -62,7 +62,12 @@ class Post < ActiveRecord::Base
   delegate :username, to: :user
 
   def self.hidden_reasons
-    @hidden_reasons ||= Enum.new(:flag_threshold_reached, :flag_threshold_reached_again, :new_user_spam_threshold_reached)
+    @hidden_reasons ||= Enum.new(
+      :flag_threshold_reached,
+      :flag_threshold_reached_again,
+      :new_user_spam_threshold_reached,
+      :flagged_by_tl3_user
+    )
   end
 
   def self.types
@@ -83,8 +88,17 @@ class Post < ActiveRecord::Base
 
   def limit_posts_per_day
     if user.created_at > 1.day.ago && post_number > 1
-      RateLimiter.new(user, "first-day-replies-per-day:#{Date.today.to_s}", SiteSetting.max_replies_in_first_day, 1.day.to_i)
+      RateLimiter.new(user, "first-day-replies-per-day:#{Date.today}", SiteSetting.max_replies_in_first_day, 1.day.to_i)
     end
+  end
+
+  def publish_change_to_clients!(type)
+    MessageBus.publish("/topic/#{topic_id}", {
+        id: id,
+        post_number: post_number,
+        updated_at: Time.now,
+        type: type
+    }, group_ids: topic.secure_group_ids)
   end
 
   def trash!(trashed_by=nil)
@@ -144,15 +158,15 @@ class Post < ActiveRecord::Base
     return raw if cook_method == Post.cook_methods[:raw_html]
 
     # Default is to cook posts
-    cooked = if !self.user || SiteSetting.leader_links_no_follow || !self.user.has_trust_level?(:leader)
-      post_analyzer.cook(*args)
-    else
-      # At trust level 3, we don't apply nofollow to links
-      cloned = args.dup
-      cloned[1] ||= {}
-      cloned[1][:omit_nofollow] = true
-      post_analyzer.cook(*cloned)
-    end
+    cooked = if !self.user || SiteSetting.tl3_links_no_follow || !self.user.has_trust_level?(TrustLevel[3])
+               post_analyzer.cook(*args)
+             else
+               # At trust level 3, we don't apply nofollow to links
+               cloned = args.dup
+               cloned[1] ||= {}
+               cloned[1][:omit_nofollow] = true
+               post_analyzer.cook(*cloned)
+             end
     Plugin::Filter.apply( :after_post_cook, self, cooked )
   end
 
@@ -204,9 +218,9 @@ class Post < ActiveRecord::Base
 
   # Prevent new users from posting the same hosts too many times.
   def has_host_spam?
-    return false if acting_user.present? && acting_user.has_trust_level?(:basic)
+    return false if acting_user.present? && acting_user.has_trust_level?(TrustLevel[1])
 
-    total_hosts_usage.each do |host, count|
+    total_hosts_usage.each do |_, count|
       return true if count >= SiteSetting.newuser_spam_host_threshold
     end
 
@@ -281,10 +295,10 @@ class Post < ActiveRecord::Base
   end
 
   def unhide!
-    self.hidden = false
-    self.hidden_reason_id = nil
+    self.update_attributes(hidden: false, hidden_at: nil, hidden_reason_id: nil)
     self.topic.update_attributes(visible: true)
-    save
+    save(validate: false)
+    publish_change_to_clients!(:acted)
   end
 
   def url
@@ -343,6 +357,8 @@ class Post < ActiveRecord::Base
 
     # make sure we trigger the post process
     trigger_post_process(true)
+
+    publish_change_to_clients!(:rebaked)
 
     new_cooked != old_cooked
   end
@@ -495,9 +511,9 @@ class Post < ActiveRecord::Base
 
   def parse_quote_into_arguments(quote)
     return {} unless quote.present?
-    args = {}
+    args = HashWithIndifferentAccess.new
     quote.first.scan(/([a-z]+)\:(\d+)/).each do |arg|
-      args[arg[0].to_sym] = arg[1].to_i
+      args[arg[0]] = arg[1].to_i
     end
     args
   end
@@ -517,7 +533,7 @@ class Post < ActiveRecord::Base
   end
 
   def save_revision
-    modifications = changes.extract!(:raw, :cooked, :edit_reason, :user_id, :wiki)
+    modifications = changes.extract!(:raw, :cooked, :edit_reason, :user_id, :wiki, :post_type)
     # make sure cooked is always present (oneboxes might not change the cooked post)
     modifications["cooked"] = [self.cooked, self.cooked] unless modifications["cooked"].present?
     PostRevision.create!(
@@ -555,8 +571,8 @@ end
 #  post_number             :integer          not null
 #  raw                     :text             not null
 #  cooked                  :text             not null
-#  created_at              :datetime
-#  updated_at              :datetime
+#  created_at              :datetime         not null
+#  updated_at              :datetime         not null
 #  reply_to_post_number    :integer
 #  reply_count             :integer          default(0), not null
 #  quote_count             :integer          default(0), not null

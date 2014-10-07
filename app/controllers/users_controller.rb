@@ -1,13 +1,14 @@
 require_dependency 'discourse_hub'
 require_dependency 'user_name_suggester'
 require_dependency 'avatar_upload_service'
+require_dependency 'rate_limiter'
 
 class UsersController < ApplicationController
 
   skip_before_filter :authorize_mini_profiler, only: [:avatar]
-  skip_before_filter :check_xhr, only: [:show, :password_reset, :update, :activate_account, :perform_account_activation, :authorize_email, :user_preferences_redirect, :avatar, :my_redirect]
+  skip_before_filter :check_xhr, only: [:show, :password_reset, :update, :account_created, :activate_account, :perform_account_activation, :authorize_email, :user_preferences_redirect, :avatar, :my_redirect]
 
-  before_filter :ensure_logged_in, only: [:username, :update, :change_email, :user_preferences_redirect, :upload_user_image, :pick_avatar, :destroy_user_image, :destroy]
+  before_filter :ensure_logged_in, only: [:username, :update, :change_email, :user_preferences_redirect, :upload_user_image, :pick_avatar, :destroy_user_image, :destroy, :check_emails]
   before_filter :respond_to_suspicious_request, only: [:create]
 
   # we need to allow account creation with bad CSRF tokens, if people are caching, the CSRF token on the
@@ -17,6 +18,7 @@ class UsersController < ApplicationController
   skip_before_filter :redirect_to_login_if_required, only: [:check_username,
                                                             :create,
                                                             :get_honeypot_value,
+                                                            :account_created,
                                                             :activate_account,
                                                             :perform_account_activation,
                                                             :send_activation_email,
@@ -44,7 +46,18 @@ class UsersController < ApplicationController
   def update
     user = fetch_user_from_params
     guardian.ensure_can_edit!(user)
-    json_result(user, serializer: UserSerializer) do |u|
+
+    if params[:user_fields].present?
+      params[:custom_fields] ||= {}
+      UserField.where(editable: true).pluck(:id).each do |fid|
+        val = params[:user_fields][fid.to_s]
+        val = nil if val === "false"
+        return render_json_error(I18n.t("login.missing_user_field")) if val.blank?
+        params[:custom_fields]["user_field_#{fid}"] = val
+      end
+    end
+
+    json_result(user, serializer: UserSerializer, additional_errors: [:user_profile]) do |u|
       updater = UserUpdater.new(current_user, user)
       updater.update(params)
     end
@@ -60,6 +73,20 @@ class UsersController < ApplicationController
     raise Discourse::InvalidParameters.new(:new_username) unless result
 
     render nothing: true
+  end
+
+  def check_emails
+    user = fetch_user_from_params
+    guardian.ensure_can_check_emails!(user)
+
+    StaffActionLogger.new(current_user).log_check_email(user, context: params[:context])
+
+    render json: {
+      email: user.email,
+      associated_accounts: user.associated_accounts
+    }
+  rescue Discourse::InvalidAccess => e
+    render json: failed_json, status: 403
   end
 
   def badge_title
@@ -146,12 +173,33 @@ class UsersController < ApplicationController
   end
 
   def create
+    params.permit(:user_fields)
+
     unless SiteSetting.allow_new_registrations
-      render json: { success: false, message: I18n.t("login.new_registrations_disabled") }
-      return
+      return fail_with("login.new_registrations_disabled")
+    end
+
+    if params[:password] && params[:password].length > User.max_password_length
+      return fail_with("login.password_too_long")
     end
 
     user = User.new(user_params)
+
+    # Handle custom fields
+    user_field_ids = UserField.pluck(:id)
+    if user_field_ids.present?
+      if params[:user_fields].blank?
+        return fail_with("login.missing_user_field")
+      else
+        fields = user.custom_fields
+        user_field_ids.each do |fid|
+          field_val = params[:user_fields][fid.to_s]
+          return fail_with("login.missing_user_field") if field_val.blank?
+          fields["user_field_#{fid}"] = field_val
+        end
+        user.custom_fields = fields
+      end
+    end
 
     authentication = UserAuthenticator.new(user, session)
 
@@ -173,10 +221,14 @@ class UsersController < ApplicationController
       authentication.finish
       activation.finish
 
+      # save user email in session, to show on account-created page
+      session["user_created_email"] = user.email
+
       render json: {
         success: true,
         active: user.active?,
-        message: activation.message
+        message: activation.message,
+        user_id: user.id
       }
     else
       render json: {
@@ -205,24 +257,33 @@ class UsersController < ApplicationController
   def password_reset
     expires_now()
 
-    @user = EmailToken.confirm(params[:token])
+    if EmailToken.valid_token_format?(params[:token])
+      @user = EmailToken.confirm(params[:token])
 
-    if @user
-      session[params[:token]] = @user.id
+      if @user
+        session["password-#{params[:token]}"] = @user.id
+      else
+        user_id = session["password-#{params[:token]}"]
+        @user = User.find(user_id) if user_id
+      end
     else
-      user_id = session[params[:token]]
-      @user = User.find(user_id) if user_id
+      @invalid_token = true
     end
 
     if !@user
       flash[:error] = I18n.t('password_reset.no_token')
     elsif request.put?
-      raise Discourse::InvalidParameters.new(:password) unless params[:password].present?
-      @user.password = params[:password]
-      @user.password_required!
-      if @user.save
-        Invite.invalidate_for_email(@user.email) # invite link can't be used to log in anymore
-        logon_after_password_reset
+      @invalid_password = params[:password].blank? || params[:password].length > User.max_password_length
+
+      if @invalid_password
+        @user.errors.add(:password, :invalid)
+      else
+        @user.password = params[:password]
+        @user.password_required!
+        if @user.save
+          Invite.invalidate_for_email(@user.email) # invite link can't be used to log in anymore
+          logon_after_password_reset
+        end
       end
     end
     render layout: 'no_js'
@@ -247,6 +308,9 @@ class UsersController < ApplicationController
     guardian.ensure_can_edit_email!(user)
     lower_email = Email.downcase(params[:email]).strip
 
+    RateLimiter.new(user, "change-email-hr-#{request.remote_ip}", 6, 1.hour).performed!
+    RateLimiter.new(user, "change-email-min-#{request.remote_ip}", 3, 1.minute).performed!
+
     # Raise an error if the email is already in use
     if User.find_by_email(lower_email)
       raise Discourse::InvalidParameters.new(:email)
@@ -262,6 +326,8 @@ class UsersController < ApplicationController
     )
 
     render nothing: true
+  rescue RateLimiter::LimitExceeded
+    render_json_error(I18n.t("rate_limiter.slow_down"))
   end
 
   def authorize_email
@@ -271,6 +337,11 @@ class UsersController < ApplicationController
     else
       flash[:error] = I18n.t('change_email.error')
     end
+    render layout: 'no_js'
+  end
+
+  def account_created
+    expires_now
     render layout: 'no_js'
   end
 
@@ -298,7 +369,14 @@ class UsersController < ApplicationController
   end
 
   def send_activation_email
-    @user = fetch_user_from_params
+
+    RateLimiter.new(nil, "activate-hr-#{request.remote_ip}", 30, 1.hour).performed!
+    RateLimiter.new(nil, "activate-min-#{request.remote_ip}", 6, 1.minute).performed!
+
+    @user = User.find_by_username_or_email(params[:username].to_s)
+
+    raise Discourse::NotFound unless @user
+
     @email_token = @user.email_tokens.unconfirmed.active.first
     enqueue_activation_email if @user
     render nothing: true
@@ -481,10 +559,14 @@ class UsersController < ApplicationController
     end
 
     def suspicious?(params)
+      return false if current_user && is_api? && current_user.admin?
+
       honeypot_or_challenge_fails?(params) || SiteSetting.invite_only?
     end
 
     def honeypot_or_challenge_fails?(params)
+      return false if is_api?
+
       params[:password_confirmation] != honeypot_value ||
         params[:challenge] != challenge_value.try(:reverse)
     end
@@ -498,4 +580,9 @@ class UsersController < ApplicationController
         :active
       ).merge(ip_address: request.ip, registration_ip_address: request.ip)
     end
+
+    def fail_with(key)
+      render json: { success: false, message: I18n.t(key) }
+    end
+
 end

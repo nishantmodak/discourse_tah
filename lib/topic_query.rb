@@ -30,11 +30,13 @@ class TopicQuery
   # Maps `order` to a columns in `topics`
   SORTABLE_MAPPING = {
     'likes' => 'like_count',
+    'op_likes' => 'op_likes',
     'views' => 'views',
     'posts' => 'posts_count',
-    'activity' => 'created_at',
+    'activity' => 'bumped_at',
     'posters' => 'participant_count',
-    'category' => 'category_id'
+    'category' => 'category_id',
+    'created' => 'created_at'
   }
 
   def initialize(user=nil, options={})
@@ -93,7 +95,7 @@ class TopicQuery
     score = "#{period}_score"
     create_list(:top, unordered: true) do |topics|
       topics = topics.joins(:top_topic).where("top_topics.#{score} > 0")
-      if period == :yearly && @user.try(:trust_level) == TrustLevel.levels[:newuser]
+      if period == :yearly && @user.try(:trust_level) == TrustLevel[0]
         topics.order(TopicQuerySQL.order_top_with_pinned_category_for(score))
       else
         topics.order(TopicQuerySQL.order_top_for(score))
@@ -210,6 +212,10 @@ class TopicQuery
         return result.references(:categories).order(TopicQuerySQL.order_by_category_sql(sort_dir))
       end
 
+      if sort_column == 'op_likes'
+        return result.order("(SELECT like_count FROM posts p3 WHERE p3.topic_id = topics.id AND p3.post_number = 1) #{sort_dir}")
+      end
+
       result.order("topics.#{sort_column} #{sort_dir}")
     end
 
@@ -245,7 +251,7 @@ class TopicQuery
       end
 
       result = apply_ordering(result, options)
-      result = result.listable_topics.includes(category: :topic_only_relative_url)
+      result = result.listable_topics.includes(:category)
       result = result.where('categories.name is null or categories.name <> ?', options[:exclude_category]).references(:categories) if options[:exclude_category]
 
       # Don't include the category topics if excluded
@@ -287,6 +293,10 @@ class TopicQuery
           result = result.where('topics.closed')
         when 'archived'
           result = result.where('topics.archived')
+        when 'visible'
+          result = result.where('topics.visible')
+        when 'invisible'
+          result = result.where('NOT topics.visible')
         end
       end
 

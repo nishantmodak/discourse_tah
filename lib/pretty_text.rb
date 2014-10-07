@@ -8,15 +8,14 @@ module PrettyText
   class Helpers
 
     def t(key, opts)
-      str = I18n.t("js." + key)
-      if opts
-        # TODO: server localisation has no parity with client should be fixed
-        str = str.dup
-        opts.each do |k,v|
-          str.gsub!("{{#{k}}}", v)
-        end
+      key = "js." + key
+      unless opts
+        return I18n.t(key)
+      else
+        str = I18n.t(key, Hash[opts.entries].symbolize_keys).dup
+        opts.each {|k,v| str.gsub!("{{#{k.to_s}}}", v.to_s) }
+        return str
       end
-      str
     end
 
     # function here are available to v8
@@ -76,7 +75,7 @@ module PrettyText
       "app/assets/javascripts/discourse/lib/markdown.js"
     )
 
-    Dir["#{Rails.root}/app/assets/javascripts/discourse/dialects/**.js"].each do |dialect|
+    Dir["#{Rails.root}/app/assets/javascripts/discourse/dialects/**.js"].sort.each do |dialect|
       unless dialect =~ /\/dialect\.js$/
         ctx.load(dialect)
       end
@@ -95,8 +94,8 @@ module PrettyText
       end
     end
 
-    ctx['quoteTemplate'] = File.open(app_root + 'app/assets/javascripts/discourse/templates/quote.js.handlebars') {|f| f.read}
-    ctx['quoteEmailTemplate'] = File.open(app_root + 'lib/assets/quote_email.js.handlebars') {|f| f.read}
+    ctx['quoteTemplate'] = File.open(app_root + 'app/assets/javascripts/discourse/templates/quote.hbs') {|f| f.read}
+    ctx['quoteEmailTemplate'] = File.open(app_root + 'lib/assets/quote_email.hbs') {|f| f.read}
     ctx.eval("HANDLEBARS_TEMPLATES = {
       'quote': Handlebars.compile(quoteTemplate),
       'quote_email': Handlebars.compile(quoteEmailTemplate),
@@ -250,7 +249,7 @@ module PrettyText
 
     # If the user is not basic, strip links from their bio
     fragment = Nokogiri::HTML.fragment(string)
-    fragment.css('a').each {|a| a.replace(a.text) }
+    fragment.css('a').each {|a| a.replace(a.inner_html) }
     fragment.to_html
   end
 

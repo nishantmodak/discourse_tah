@@ -30,6 +30,13 @@ class TopicsController < ApplicationController
 
   skip_before_filter :check_xhr, only: [:show, :feed]
 
+  def id_for_slug
+    topic = Topic.find_by(slug: params[:slug].downcase)
+    guardian.ensure_can_see!(topic)
+    raise Discourse::NotFound unless topic
+    render json: {slug: topic.slug, topic_id: topic.id, url: topic.url}
+  end
+
   def show
     flash["referer"] ||= request.referer
 
@@ -47,12 +54,17 @@ class TopicsController < ApplicationController
     rescue Discourse::NotFound
       topic = Topic.find_by(slug: params[:id].downcase) if params[:id]
       raise Discourse::NotFound unless topic
-      redirect_to_correct_topic(topic) && return
+      redirect_to_correct_topic(topic, opts[:post_number]) && return
+    end
+
+    page = params[:page].to_i
+    if (page < 0) || ((page - 1) * SiteSetting.posts_per_page > @topic_view.topic.highest_post_number)
+      raise Discourse::NotFound
     end
 
     discourse_expires_in 1.minute
 
-    redirect_to_correct_topic(@topic_view.topic) && return if slugs_do_not_match || (!request.xhr? && params[:slug].nil?)
+    redirect_to_correct_topic(@topic_view.topic, opts[:post_number]) && return if slugs_do_not_match || (!request.format.json? && params[:slug].nil?)
 
     track_visit_to_topic
 
@@ -79,7 +91,7 @@ class TopicsController < ApplicationController
     params.permit(:min_trust_level, :min_score, :min_replies, :bypass_trust_level_score, :only_moderator_liked)
 
     opts = { best: params[:best].to_i,
-      min_trust_level: params[:min_trust_level] ? 1 : params[:min_trust_level].to_i,
+      min_trust_level: params[:min_trust_level] ? params[:min_trust_level].to_i : 1,
       min_score: params[:min_score].to_i,
       min_replies: params[:min_replies].to_i,
       bypass_trust_level_score: params[:bypass_trust_level_score].to_i, # safe cause 0 means ignore
@@ -115,7 +127,8 @@ class TopicsController < ApplicationController
 
     success = false
     Topic.transaction do
-      success = topic.save && topic.change_category_to_id(params[:category_id].to_i)
+      success = topic.save
+      success &= topic.change_category_to_id(params[:category_id].to_i) unless topic.private_message?
     end
 
     # this is used to return the title to the client as it may have been changed by "TextCleaner"
@@ -198,7 +211,7 @@ class TopicsController < ApplicationController
     guardian.ensure_can_delete!(topic)
 
     first_post = topic.ordered_posts.first
-    PostDestroyer.new(current_user, first_post).destroy
+    PostDestroyer.new(current_user, first_post, { context: params[:context] }).destroy
 
     render nothing: true
   end
@@ -275,6 +288,8 @@ class TopicsController < ApplicationController
 
     dest_topic = move_posts_to_destination(topic)
     render_topic_changes(dest_topic)
+  rescue ActiveRecord::RecordInvalid => ex
+    render_json_error(ex)
   end
 
   def change_post_owners
@@ -378,8 +393,12 @@ class TopicsController < ApplicationController
     params[:slug] && @topic_view.topic.slug != params[:slug]
   end
 
-  def redirect_to_correct_topic(topic)
-    redirect_to "#{topic.relative_url}#{request.format.json? ? ".json" : ""}", status: 301
+  def redirect_to_correct_topic(topic, post_number=nil)
+    url = topic.relative_url
+    url << "/#{post_number}" if post_number.to_i > 0
+    url << ".json" if request.format.json?
+
+    redirect_to url, status: 301
   end
 
   def track_visit_to_topic
@@ -398,7 +417,7 @@ class TopicsController < ApplicationController
         username: request['u'],
         ip_address: request.remote_ip
       )
-    end unless request.xhr?
+    end unless request.format.json?
 
     Scheduler::Defer.later "Track Visit" do
       TopicViewItem.add(topic_id, ip, user_id)
@@ -410,7 +429,7 @@ class TopicsController < ApplicationController
   end
 
   def should_track_visit_to_topic?
-    !!((!request.xhr? || params[:track_visit]) && current_user)
+    !!((!request.format.json? || params[:track_visit]) && current_user)
   end
 
   def perform_show_response

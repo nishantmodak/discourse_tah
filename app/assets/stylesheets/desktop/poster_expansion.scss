@@ -1,6 +1,6 @@
 // styles that apply to the "share" popup when sharing a link to a post or topic
 
-#poster-expansion {
+#user-expansion {
   position: absolute;
   width: 460px;
   left: 20px;
@@ -9,7 +9,7 @@
   margin-top: -2px;
   background-color: $secondary;
   padding: 12px 12px 5px 12px;
-  border: 1px solid scale-color-diff(); 
+  border: 1px solid scale-color-diff();
 
   .avatar-placeholder {
     width: 120px;
@@ -53,6 +53,8 @@
     font-weight: normal;
     margin-top: 0;
     color: scale-color($primary, $lightness: 50%);
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .groups {
     font-size: 13px;
@@ -120,7 +122,7 @@
     .badge-section {
       margin-top: 10px;
       float: left;
-      width: 300px;
+      width: 270px;
 
       h3 {
         color: $primary;
@@ -134,5 +136,10 @@
       padding: 3px 8px;
       font-size: 13px;
     }
+  }
+
+  .suspended {
+    color: $danger;
+    margin-bottom: 10px;
   }
 }

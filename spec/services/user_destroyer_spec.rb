@@ -111,22 +111,22 @@ describe UserDestroyer do
 
           it "deletes the posts" do
             destroy
-            post.reload.deleted_at.should_not be_nil
-            post.user_id.should be_nil
+            post.reload.deleted_at.should_not == nil
+            post.user_id.should == nil
           end
 
           it "does not delete topics started by others in which the user has replies" do
             destroy
-            topic.reload.deleted_at.should be_nil
-            topic.user_id.should_not be_nil
+            topic.reload.deleted_at.should == nil
+            topic.user_id.should_not == nil
           end
 
           it "deletes topics started by the deleted user" do
             spammer_topic = Fabricate(:topic, user: @user)
             spammer_post = Fabricate(:post, user: @user, topic: spammer_topic)
             destroy
-            spammer_topic.reload.deleted_at.should_not be_nil
-            spammer_topic.user_id.should be_nil
+            spammer_topic.reload.deleted_at.should_not == nil
+            spammer_topic.user_id.should == nil
           end
         end
 
@@ -138,18 +138,28 @@ describe UserDestroyer do
 
           it "deletes the posts" do
             destroy
-            post.reload.deleted_at.should_not be_nil
-            post.user_id.should be_nil
+            post.reload.deleted_at.should_not == nil
+            post.user_id.should == nil
           end
         end
       end
+    end
+
+    context 'user has no posts, but user_stats table has post_count > 0' do
+      before do
+        # out of sync user_stat data shouldn't break UserDestroyer
+        @user.user_stat.update_attribute(:post_count, 1)
+      end
+      subject(:destroy) { UserDestroyer.new(@user).destroy(@user, {delete_posts: false}) }
+
+      include_examples "successfully destroy a user"
     end
 
     context 'user has deleted posts' do
       let!(:deleted_post) { Fabricate(:post, user: @user, deleted_at: 1.hour.ago) }
       it "should mark the user's deleted posts as belonging to a nuked user" do
         expect { UserDestroyer.new(@admin).destroy(@user) }.to change { User.count }.by(-1)
-        deleted_post.reload.user_id.should be_nil
+        deleted_post.reload.user_id.should == nil
       end
     end
 

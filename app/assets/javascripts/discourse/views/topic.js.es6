@@ -6,6 +6,7 @@ export default Discourse.View.extend(AddCategoryClass, Discourse.Scrolling, {
   userFiltersBinding: 'controller.userFilters',
   classNameBindings: ['controller.multiSelect:multi-select',
                       'topic.archetype',
+                      'topic.is_warning',
                       'topic.category.read_restricted:read_restricted',
                       'topic.deleted:deleted-topic',
                       'topic.categoryClass'],
@@ -47,9 +48,14 @@ export default Discourse.View.extend(AddCategoryClass, Discourse.Scrolling, {
     });
 
     this.$().on('mouseup.discourse-redirect', '.cooked a, a.track-link', function(e) {
+      var selection = window.getSelection && window.getSelection();
+      // bypass if we are selecting stuff
+      if (selection.type === "Range" || selection.rangeCount > 0) { return true; }
+
       var $target = $(e.target);
       if ($target.hasClass('mention') || $target.parents('.expanded-embed').length) { return false; }
       return Discourse.ClickTrack.trackClick(e);
+
     });
 
   }.on('didInsertElement'),

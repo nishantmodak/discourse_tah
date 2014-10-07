@@ -21,6 +21,13 @@ Discourse.Route = Em.Route.extend({
     Em.run.scheduleOnce('afterRender', Discourse.Route, 'cleanDOM');
   },
 
+  redirectIfLoginRequired: function() {
+    var app = this.controllerFor('application');
+    if (app.get('loginRequired')) {
+      this.replaceWith('login');
+    }
+  },
+
   openTopicDraft: function(model){
     // If there's a draft, open the create topic composer
     if (model.draft) {
@@ -34,6 +41,10 @@ Discourse.Route = Em.Route.extend({
         });
       }
     }
+  },
+
+  isPoppedState: function(transition) {
+    return (!transition._discourse_intercepted) && (!!transition.intent.url);
   }
 
 });
@@ -77,6 +88,10 @@ Discourse.Route.reopenClass({
     $('#discourse-modal').modal('hide');
     var hideDropDownFunction = $('html').data('hide-dropdown');
     if (hideDropDownFunction) { hideDropDownFunction(); }
+
+    // TODO: Avoid container lookup here
+    var appEvents = Discourse.__container__.lookup('app-events:main');
+    appEvents.trigger('dom:clean');
   },
 
   /**

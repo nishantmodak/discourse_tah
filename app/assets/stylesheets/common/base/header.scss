@@ -1,5 +1,5 @@
 .d-header {
-    min-width: 100%;
+    width: 100%;
     position: absolute;
     top: 0;
     z-index: 1001;
@@ -30,8 +30,7 @@
     }
 
     .fa-home {
-      font-size: 20px;
-      line-height: 40px;
+      font-size: 23px;
     }
 
     .panel {
@@ -39,23 +38,17 @@
       position: relative;
     }
 
-    .current-username {
-      float: left;
-      a {
-        color: $header_primary;
-        font-size: 14px;
-        max-width: 200px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-    }
-    button.login-button {
+    button.login-button, button.sign-up-button {
       float: left;
       margin-top: 7px;
       padding: 6px 10px;
       .fa { margin-right: 3px; }
     }
+
+    button.login-button {
+      margin-left: 7px;
+    }
+
     .icons {
       float: left;
       text-align: center;
@@ -113,7 +106,7 @@
       [class^="fa fa-"] {
         width: 32px;
         height: 32px;
-        font-size: 20px;
+        font-size: 21px;
         line-height: 32px;
         display: inline-block;
       }
@@ -137,7 +130,6 @@
     .flagged-posts {
       background: $danger;
     }
-
 }
 
 .d-dropdown {
@@ -158,6 +150,7 @@
   b.topics-count {
     color: scale-color($primary, $lightness: 50%);
     font-weight: normal;
+    font-size: 11px;
   }
 
   ul {
@@ -170,7 +163,7 @@
     line-height: 16px;
 
       .fa {
-        margin-right: 3px;
+        font-size: inherit;
       }
 
       a {
@@ -179,14 +172,14 @@
       }
 
       &:hover a:not(.badge-notification) {
-        background-color: dark-light-diff(rgba($highlight,.7), $secondary, 50%, -10%);
+        background-color: dark-light-diff($highlight, $secondary, 50%, -70%);
         }
 
       button {margin-left: 5px;}
   }
 
   .heading a:hover  {
-    background-color: dark-light-diff($highlight, $secondary, 50%, -30%);
+    background-color: dark-light-diff($highlight, $secondary, 50%, -70%);
   }
 
   .selected {
@@ -199,19 +192,26 @@
     .fa { color: scale-color($primary, $lightness: 50%); }
     .icon { color: scale-color($primary, $lightness: 30%); }
     li {
-      background-color: scale-color($tertiary, $lightness: 90%);
-      padding: 3px 0 3px 2px;
+      background-color: dark-light-diff($tertiary, $secondary, 90%, -60%);
       i {
         float: left;
         margin-right: 5px;
         padding-top: 2px;
       }
       span { color: $primary; }
-      &:hover a { background: transparent; }
-      a { padding: 1px; }
+      &:hover a { background-color: dark-light-diff($highlight, $secondary, 50%, -70%); }
+      a { padding: 4px 0 3px 2px; }
       p {
         margin: 0;
         overflow: hidden;
+      }
+    }
+    .is-warning {
+      i.fa-envelope-o {
+        &:before {
+          content: "\f0e0";
+        }
+        color: $danger;
       }
     }
     .read {
@@ -227,6 +227,8 @@
       font-size: 24px;
       text-align: center;
     }
+    /* as a big ol' click target, don't let text inside be selected */
+    @include unselectable;
   }
 
   .category-links li:not(.heading) a {
@@ -279,8 +281,11 @@
       size: 18px;
     };
   }
+  // I am ghetto using this to display "Show More".. be warned
   .no-results {
     padding: 5px;
+    height: 12px;
+    width:60%;
   }
   .filter {
     float: right;
@@ -312,4 +317,27 @@
       margin-right: 5px;
     }
   }
+}
+
+.search-link .topic-statuses {
+  float: none;
+  display: inline-block;
+  color: scale-color($primary, $lightness: 50%);
+  margin: 0;
+  .fa {
+    margin: 0;
+  }
+}
+
+.search-link .badge-category {
+  padding: 4px 6px;
+  margin-left: 6px;
+}
+
+.highlight-strong {
+  background-color: dark-light-diff($highlight, $secondary, 40%, -50%);
+}
+
+.search-highlight {
+  font-weight: bold;
 }

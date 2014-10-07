@@ -1,10 +1,9 @@
 class EmailLog < ActiveRecord::Base
   belongs_to :user
-  validates_presence_of :email_type
-  validates_presence_of :to_address
-
   belongs_to :post
   belongs_to :topic
+
+  validates :email_type, :to_address, presence: true
 
   scope :sent,    -> { where(skipped: false) }
   scope :skipped, -> { where(skipped: true) }
@@ -37,8 +36,8 @@ end
 #  to_address     :string(255)      not null
 #  email_type     :string(255)      not null
 #  user_id        :integer
-#  created_at     :datetime
-#  updated_at     :datetime
+#  created_at     :datetime         not null
+#  updated_at     :datetime         not null
 #  reply_key      :string(32)
 #  post_id        :integer
 #  topic_id       :integer

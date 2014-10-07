@@ -60,8 +60,6 @@ class CategoryUser < ActiveRecord::Base
     end
   end
 
-  private
-
   def self.apply_default_to_topic(topic, level, reason)
     # Can not afford to slow down creation of topics when a pile of users are watching new topics, reverting to SQL for max perf here
     sql = <<SQL
@@ -83,6 +81,7 @@ SQL
             )
   end
 
+  private_class_method :apply_default_to_topic
 end
 
 # == Schema Information

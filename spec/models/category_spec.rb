@@ -12,6 +12,13 @@ describe Category do
     should validate_uniqueness_of(:name).scoped_to(:parent_category_id)
   end
 
+  it 'validates uniqueness in case insensitive way' do
+    Fabricate(:category, name: "Cats")
+    c = Fabricate.build(:category, name: "cats")
+    c.should_not be_valid
+    c.errors[:name].should be_present
+  end
+
   it { should belong_to :topic }
   it { should belong_to :user }
 
@@ -32,7 +39,7 @@ describe Category do
     it "can determine read_restricted" do
       read_restricted, resolved = Category.resolve_permissions(:everyone => :full)
 
-      read_restricted.should be_false
+      read_restricted.should == false
       resolved.should == []
     end
   end
@@ -95,13 +102,13 @@ describe Category do
     let(:group) { Fabricate(:group) }
 
     it "secures categories correctly" do
-      category.read_restricted?.should be_false
+      category.read_restricted?.should == false
 
       category.set_permissions({})
-      category.read_restricted?.should be_true
+      category.read_restricted?.should == true
 
       category.set_permissions(:everyone => :full)
-      category.read_restricted?.should be_false
+      category.read_restricted?.should == false
 
       user.secure_categories.should be_empty
 
@@ -139,6 +146,10 @@ describe Category do
 
   it "strips leading and trailing blanks" do
     Fabricate(:category, name: "  blanks ").name.should == "blanks"
+  end
+
+  it "sets name_lower" do
+    Fabricate(:category, name: "Not MySQL").name_lower.should == "not mysql"
   end
 
   it "has custom fields" do
@@ -205,7 +216,7 @@ describe Category do
 
       @topic.pinned_at.should be_present
 
-      Guardian.new(@category.user).can_delete?(@topic).should be_false
+      Guardian.new(@category.user).can_delete?(@topic).should == false
 
       @topic.posts.count.should == 1
 
@@ -232,14 +243,21 @@ describe Category do
 
     it "should not set its description topic to auto-close" do
       category = Fabricate(:category, name: 'Closing Topics', auto_close_hours: 1)
-      category.topic.auto_close_at.should be_nil
+      category.topic.auto_close_at.should == nil
     end
 
     describe "creating a new category with the same slug" do
-      it "should have a blank slug" do
+      it "should have a blank slug if at the same level" do
         category = Fabricate(:category, name: "Amazing Categóry")
         category.slug.should be_blank
         category.slug_for_url.should == "#{category.id}-category"
+      end
+
+      it "doesn't have a blank slug if not at the same level" do
+        parent = Fabricate(:category, name: 'Other parent')
+        category = Fabricate(:category, name: "Amazing Categóry", parent_category_id: parent.id)
+        category.slug.should == 'amazing-category'
+        category.slug_for_url.should == "amazing-category"
       end
     end
 
@@ -268,8 +286,8 @@ describe Category do
     end
 
     it 'is deleted correctly' do
-      Category.exists?(id: @category_id).should be_false
-      Topic.exists?(id: @topic_id).should be_false
+      Category.exists?(id: @category_id).should == false
+      Topic.exists?(id: @topic_id).should == false
     end
   end
 
@@ -360,6 +378,26 @@ describe Category do
         @category.posts_year.should == 1
         @category.posts_month.should == 1
         @category.posts_week.should == 1
+      end
+    end
+
+    context 'for uncategorized category' do
+      before do
+        @uncategorized = Category.find(SiteSetting.uncategorized_category_id)
+        create_post(user: Fabricate(:user), category: @uncategorized.name)
+        Category.update_stats
+        @uncategorized.reload
+      end
+
+      it 'updates topic stats' do
+        @uncategorized.topics_week.should == 1
+        @uncategorized.topics_month.should == 1
+        @uncategorized.topics_year.should == 1
+        @uncategorized.topic_count.should == 1
+        @uncategorized.post_count.should == 1
+        @uncategorized.posts_year.should == 1
+        @uncategorized.posts_month.should == 1
+        @uncategorized.posts_week.should == 1
       end
     end
   end
