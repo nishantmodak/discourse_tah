@@ -309,12 +309,8 @@ cs:
       title: 'Nevhodné'
       long_form: 'nahlášeno jako nevhodné'
     notify_user:
-      title: 'Informovat uživatele {{username}}'
-      long_form: 'informoval uživatele'
       email_body: "%{link}\\\n\\\n%{message}\n"
     notify_moderators:
-      title: 'Upozornit moderátory'
-      long_form: 'označil příspěvek pro moderátora'
       email_title: 'Příspěvek v tématu "%{title}" vyžaduje pozornost moderátora'
       email_body: "%{link}\\\n\\\n%{message}\n"
     bookmark:
@@ -338,8 +334,6 @@ cs:
       title: 'Nevhodné'
       long_form: 'nahlášeno jako nevhodné'
     notify_moderators:
-      title: 'Upozornit moderátory'
-      long_form: 'označil příspěvek pro moderátora'
       email_title: 'The topic "%{title}" requires moderator attention'
       email_body: "%{link}\\\n\\\n%{message}\n"
   archetypes:
@@ -481,10 +475,6 @@ cs:
       description: "HTML přidané na vršek každé stránky (za hlavičku, ale před navigaci a před název tématu)."
     bottom:
       title: "Patička stránky"
-      description: "HTML přidané na spodek každé stránky."
-    tos_signup_form_message:
-      title: "Registrační formulář: Zpráva s podmínkami služby"
-      description: "The message that will appear beside a checkbox on the signup form if the tos_accept_required site setting is enabled."
   site_settings:
     default_locale: "Výchozí jazyk této Discourse instance (kód ve formátu ISO 639-1)"
     allow_user_locale: "Povolit uživatelům nastavit si jazyk fóra"
@@ -498,8 +488,6 @@ cs:
     email_custom_headers: "Seznam vlastních hlaviček emailů, oddělený svislítkem"
     use_https: "Should the full url for the site (Discourse.base_url) be http or https?"
     enable_long_polling: "'Message bus' smí používat dlouhé výzvy"
-    long_polling_interval: "Interval v milisekundách než je zahájena nová dlouhá výzva"
-    polling_interval: "Jak často se mají zasílat výzvy přihlášených uživatelům v milisekundách"
     anon_polling_interval: "Jak často se mají zasílat výzvy anonymním uživatelům v milisekundách"
     auto_track_topics_after: "Výchozí počet milisekund než je téma automaticky sledováno, uživatelé si pomoc změnit (0 znamená vždy, -1 znamená nikdy)"
     new_topic_duration_minutes: "Výchozí počet minut, jak dlouho je téma považováno za nové, uživatelé si pomoc změnit (-1 znamená vždy, -2 znamená od poslední návštěvy)"
@@ -554,7 +542,6 @@ cs:
     enable_mobile_theme: "Používat na mobilních zařízeních verzi přizpůsobenou pro mobily s možností přejít na plnou verzi. Zruště pokud chcete používat vlastní plně responzivní kaskádový styl."
     short_progress_text_threshold: "After the number of posts in a topic goes above this number, the progress bar will only show the current post number. If you change the progress bar's width, you may need to change this value."
     default_code_lang: "Default programming language syntax highlighting applied to GitHub code blocks (lang-auto, ruby, python etc.)"
-    tos_accept_required: "Uživatelé budou muset při registraci zaškrtnout, že souhlasí s Podmínkami používání. Zprávu můžete upravit v záložce Obsah webu změnou „Registrace: Zpráva s podmínkami používání“."
   notification_types:
     mentioned: "%{display_username} vás zmínil v %{link}"
     liked: "%{display_username} se líbí váš příspěvek v %{link}"
@@ -588,18 +575,6 @@ cs:
     archived_disabled: "Toto téma je vráceno z archivu. Již není zmraženo a může být měněno."
     closed_enabled: "Toto téma je uzavřeno. Nové odpovědi nebudou přijímány."
     closed_disabled: "Toto téma je otevřeno. Nové odpovědi jsou povoleny."
-    autoclosed_enabled_days:
-      zero: "Tohle téma bylo automaticky uzavřeno po 1 dni. Nové odpovědi už se nepřijímají."
-      one: "Tohle téma bylo automaticky uzavřeno po 1 dni. Nové odpovědi už se nepřijímají."
-      other: "Toto téma bylo po %{count} dnech automaticky zavřeno. Nové odpovědi se už nepřijímají."
-    autoclosed_enabled_hours:
-      zero: "Toto téma bylo po 1 hodině automaticky uzavřeno. Nové odpovědi se už nepřijímají."
-      one: "Toto téma bylo po 1 hodině automaticky uzavřeno. Nové odpovědi se už nepřijímají."
-      other: "Toto téma bylo po %{count} hodinách automaticky uzavřeno. Nové odpovědi se už nepřijímají."
-    autoclosed_enabled_minutes:
-      zero: "Toto téma bylo po 1 minutě automaticky uzavřeno. Nové odpovědi se už nepřijímají."
-      one: "Toto téma bylo po 1 minutě automaticky uzavřeno. Nové odpovědi se už nepřijímají."
-      other: "Toto téma bylo po %{count} minutách automaticky uzavřeno. Nové odpovědi se už nepřijímají."
     autoclosed_disabled: "Toto téma je otevřeno. Nové odpovědi jsou povoleny."
     pinned_disabled: "Toto téma již není připevněno. Nebude se zobrazovat na vrcholu seznamu témat v kategorii."
   login:
@@ -637,12 +612,6 @@ cs:
       subject_template: "Vítejte na %{site_name}!"
     welcome_invite:
       subject_template: "Vítejte na %{site_name}!"
-    export_succeeded:
-      subject_template: "Export úspěšně dokončen"
-      text_body_template: "Export proběhl úspěšně."
-    import_succeeded:
-      subject_template: "Import úspěšně dokončen"
-      text_body_template: "Import proběhl úspěšně."
     too_many_spam_flags:
       subject_template: "Účet zablokován"
     blocked_by_staff:

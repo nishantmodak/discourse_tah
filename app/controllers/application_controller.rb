@@ -7,6 +7,7 @@ require_dependency 'rate_limiter'
 require_dependency 'crawler_detection'
 require_dependency 'json_error'
 require_dependency 'letter_avatar'
+require_dependency 'distributed_cache'
 
 class ApplicationController < ActionController::Base
   include CurrentUser
@@ -46,8 +47,12 @@ class ApplicationController < ActionController::Base
     SiteSetting.enable_escaped_fragments? && params.key?("_escaped_fragment_")
   end
 
+  def use_crawler_layout?
+    @use_crawler_layout ||= (has_escaped_fragment? || CrawlerDetection.crawler?(request.user_agent))
+  end
+
   def set_layout
-    has_escaped_fragment? || CrawlerDetection.crawler?(request.user_agent) ? 'crawler' : 'application'
+    use_crawler_layout? ? 'crawler' : 'application'
   end
 
   rescue_from Exception do |exception|
@@ -257,7 +262,7 @@ class ApplicationController < ActionController::Base
     def custom_html_json
       data = {
         top: SiteText.text_for(:top),
-        bottom: SiteText.text_for(:bottom)
+        footer: SiteCustomization.custom_footer(session[:preview_style])
       }
 
       if DiscoursePluginRegistry.custom_html
@@ -267,11 +272,21 @@ class ApplicationController < ActionController::Base
       MultiJson.dump(data)
     end
 
-    def banner_json
-      topic = Topic.where(archetype: Archetype.banner).limit(1).first
-      banner = topic.present? ? topic.banner : {}
+    def self.banner_json_cache
+      @banner_json_cache ||= DistributedCache.new("banner_json")
+    end
 
-      MultiJson.dump(banner)
+    def banner_json
+
+      json = ApplicationController.banner_json_cache["json"]
+
+      unless json
+        topic = Topic.where(archetype: Archetype.banner).limit(1).first
+        banner = topic.present? ? topic.banner : {}
+        ApplicationController.banner_json_cache["json"] = json = MultiJson.dump(banner)
+      end
+
+      json
     end
 
     def render_json_error(obj)
@@ -354,7 +369,6 @@ class ApplicationController < ActionController::Base
     def render_post_json(post, add_raw=true)
       post_serializer = PostSerializer.new(post, scope: guardian, root: false)
       post_serializer.add_raw = add_raw
-      post_serializer.topic_slug = post.topic.slug if post.topic.present?
 
       counts = PostAction.counts_for([post], current_user)
       if counts && counts = counts[post.id]

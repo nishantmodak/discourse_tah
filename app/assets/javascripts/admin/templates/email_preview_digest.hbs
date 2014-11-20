@@ -18,14 +18,10 @@
   </div>
 </div>
 
-{{#if loading}}
-  <div class='admin-loading'>{{i18n loading}}</div>
-{{else}}
+{{#loading-spinner condition=loading}}
   {{#if showHtml}}
     {{{html_content}}}
   {{else}}
     <pre>{{{text_content}}}</pre>
   {{/if}}
-{{/if}}
-
-
+{{/loading-spinner}}

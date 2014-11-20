@@ -1,3 +1,6 @@
+require_dependency 'distributed_cache'
+require_dependency 'sass/discourse_stylesheets'
+
 class Category < ActiveRecord::Base
 
   include Positionable
@@ -37,6 +40,8 @@ class Category < ActiveRecord::Base
   after_create :publish_categories_list
   after_destroy :publish_categories_list
   after_update :rename_category_definition, if: :name_changed?
+
+  after_save :publish_discourse_stylesheet
 
   has_one :category_search_data
   belongs_to :parent_category, class_name: 'Category'
@@ -170,7 +175,8 @@ SQL
   def create_category_definition
     t = Topic.new(title: I18n.t("category.topic_prefix", category: name), user: user, pinned_at: Time.now, category_id: id)
     t.skip_callbacks = true
-    t.auto_close_hours = nil
+    t.ignore_category_auto_close = true
+    t.set_auto_close(nil)
     t.save!(validate: false)
     update_column(:topic_id, t.id)
     t.posts.create(raw: post_template, user: user)
@@ -178,6 +184,16 @@ SQL
 
   def topic_url
     topic_only_relative_url.try(:relative_url)
+  end
+
+  def description_text
+    return nil unless description
+
+    @@cache ||= LruRedux::ThreadSafeCache.new(100)
+    @@cache.getset(self.description) do
+      Nokogiri::HTML(self.description).text
+    end
+
   end
 
   def ensure_slug
@@ -336,10 +352,26 @@ SQL
     id == SiteSetting.uncategorized_category_id
   end
 
+  @@url_cache = DistributedCache.new('category_url')
+
+  after_save do
+    # parent takes part in url calculation
+    # any change could invalidate multiples
+    @@url_cache.clear
+  end
+
   def url
-    url = "/category"
-    url << "/#{parent_category.slug}" if parent_category_id
-    url << "/#{slug}"
+    url = @@url_cache[self.id]
+    unless url
+      url = "/category"
+      url << "/#{parent_category.slug}" if parent_category_id
+      url << "/#{slug}"
+      url.freeze
+
+      @@url_cache[self.id] = url
+    end
+
+    url
   end
 
   # If the name changes, try and update the category definition topic too if it's
@@ -351,44 +383,49 @@ SQL
       topic.update_column(:title, I18n.t("category.topic_prefix", category: name))
     end
   end
+
+  def publish_discourse_stylesheet
+    DiscourseStylesheets.cache.clear
+  end
 end
 
 # == Schema Information
 #
 # Table name: categories
 #
-#  id                       :integer          not null, primary key
-#  name                     :string(50)       not null
-#  color                    :string(6)        default("AB9364"), not null
-#  topic_id                 :integer
-#  topic_count              :integer          default(0), not null
-#  created_at               :datetime         not null
-#  updated_at               :datetime         not null
-#  user_id                  :integer          not null
-#  topics_year              :integer          default(0)
-#  topics_month             :integer          default(0)
-#  topics_week              :integer          default(0)
-#  slug                     :string(255)      not null
-#  description              :text
-#  text_color               :string(6)        default("FFFFFF"), not null
-#  read_restricted          :boolean          default(FALSE), not null
-#  auto_close_hours         :float
-#  post_count               :integer          default(0), not null
-#  latest_post_id           :integer
-#  latest_topic_id          :integer
-#  position                 :integer
-#  parent_category_id       :integer
-#  posts_year               :integer          default(0)
-#  posts_month              :integer          default(0)
-#  posts_week               :integer          default(0)
-#  email_in                 :string(255)
-#  email_in_allow_strangers :boolean          default(FALSE)
-#  topics_day               :integer          default(0)
-#  posts_day                :integer          default(0)
-#  logo_url                 :string(255)
-#  background_url           :string(255)
-#  allow_badges             :boolean          default(TRUE), not null
-#  name_lower               :string(50)       not null
+#  id                            :integer          not null, primary key
+#  name                          :string(50)       not null
+#  color                         :string(6)        default("AB9364"), not null
+#  topic_id                      :integer
+#  topic_count                   :integer          default(0), not null
+#  created_at                    :datetime         not null
+#  updated_at                    :datetime         not null
+#  user_id                       :integer          not null
+#  topics_year                   :integer          default(0)
+#  topics_month                  :integer          default(0)
+#  topics_week                   :integer          default(0)
+#  slug                          :string(255)      not null
+#  description                   :text
+#  text_color                    :string(6)        default("FFFFFF"), not null
+#  read_restricted               :boolean          default(FALSE), not null
+#  auto_close_hours              :float
+#  post_count                    :integer          default(0), not null
+#  latest_post_id                :integer
+#  latest_topic_id               :integer
+#  position                      :integer
+#  parent_category_id            :integer
+#  posts_year                    :integer          default(0)
+#  posts_month                   :integer          default(0)
+#  posts_week                    :integer          default(0)
+#  email_in                      :string(255)
+#  email_in_allow_strangers      :boolean          default(FALSE)
+#  topics_day                    :integer          default(0)
+#  posts_day                     :integer          default(0)
+#  logo_url                      :string(255)
+#  background_url                :string(255)
+#  allow_badges                  :boolean          default(TRUE), not null
+#  name_lower                    :string(50)       not null
+#  auto_close_based_on_last_post :boolean          default(FALSE)
 #
 # Indexes
 #

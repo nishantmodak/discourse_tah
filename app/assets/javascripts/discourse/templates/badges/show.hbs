@@ -35,12 +35,7 @@
         </div>
       {{/each}}
     </div>
-    {{#if canLoadMore}}
-      <div class='spinner'></div>
-    {{/if}}
-  {{else}}
-    {{#unless userBadgesLoaded}}
-      <div class='spinner'></div>
-    {{/unless}}
+
+    {{loading-spinner condition=canLoadMore}}
   {{/if}}
 </div>

@@ -8,6 +8,12 @@
   </div>
 {{/if}}
 
+{{#if showDismissButton}}
+  <div class='notification-buttons'>
+    <button title="{{i18n user.dismiss_notifications_tooltip}}" id='dismiss-notifications-top' class='btn notifications-read' {{action "resetNew"}}>{{i18n user.dismiss_notifications}}</button>
+  </div>
+{{/if}}
+
 {{#each itemController="notification"}}
   <div {{bind-attr class=":item :notification read::unread"}}>
     {{notification-item notification=this scope=scope}}
@@ -16,9 +22,13 @@
     </span>
   </div>
 {{/each}}
-{{#if loading}}
-  <div class='spinner'></div>
-{{/if}}
-{{#unless canLoadMore}}
-  <div class='end-of-stream'></div>
-{{/unless}}
+
+{{#loading-spinner condition=loading}}
+  {{#unless canLoadMore}}
+    {{#if showDismissButton}}
+      <div class='notification-buttons'>
+        <button title="{{i18n user.dismiss_notifications_tooltip}}" id='dismiss-notifications' class='btn notifications-read' {{action "resetNew"}}>{{i18n user.dismiss_notifications}}</button>
+      </div>
+    {{/if}}
+  {{/unless}}
+{{/loading-spinner}}

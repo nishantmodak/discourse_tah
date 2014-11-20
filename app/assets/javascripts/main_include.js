@@ -5,9 +5,13 @@
 // Pagedown customizations
 //= require ./pagedown_custom.js
 
+// This is a BUG we should fix
+// it is only required here cause preview is not loading it using LAB
 //= require highlight.pack.js
+//
 
 // Stuff we need to load first
+//= require ./discourse/lib/ember_compat_handlebars
 //= require ./discourse/lib/computed
 //= require ./discourse/mixins/scrolling
 //= require_tree ./discourse/mixins
@@ -35,11 +39,17 @@
 //= require ./discourse/views/pagedown-preview
 //= require ./discourse/routes/discourse_route
 //= require ./discourse/routes/build-topic-route
-//= require ./discourse/routes/discourse_restricted_user_route
+//= require ./discourse/routes/restricted-user
+//= require ./discourse/routes/user-topic-list
+//= require ./discourse/routes/user-activity-stream
+//= require ./discourse/routes/topic-from-params
 //= require ./discourse/components/top-title
 //= require ./discourse/components/text-field
+//= require ./discourse/components/visible
+//= require ./discourse/components/conditional-loading-spinner
 //= require ./discourse/helpers/user-avatar
 //= require ./discourse/helpers/cold-age-class
+//= require ./discourse/helpers/loading-spinner
 
 //= require ./discourse/dialects/dialect
 //= require_tree ./discourse/dialects

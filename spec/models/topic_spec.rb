@@ -21,6 +21,14 @@ describe Topic do
       Fabricate.build(:topic, title: title).slug.should == slug
     end
 
+    let(:chinese_title) { "习近平:中企承建港口电站等助斯里兰卡发展" }
+    let(:chinese_slug) { "xi-jin-ping-zhong-qi-cheng-jian-gang-kou-dian-zhan-deng-zhu-si-li-lan-qia-fa-zhan" }
+
+    it "returns a symbolized slug for a chinese title" do
+      SiteSetting.default_locale = 'zh_CN'
+      Fabricate.build(:topic, title: chinese_title).slug.should == chinese_slug
+    end
+
     it "returns 'topic' when the slug is empty (say, non-english chars)" do
       Slug.expects(:for).with(title).returns("")
       Fabricate.build(:topic, title: title).slug.should == "topic"
@@ -352,21 +360,21 @@ describe Topic do
       it "doesn't bump the topic on an edit to the last post that doesn't result in a new version" do
         lambda {
           SiteSetting.expects(:ninja_edit_window).returns(5.minutes)
-          @last_post.revise(@last_post.user, 'updated contents', revised_at: @last_post.created_at + 10.seconds)
+          @last_post.revise(@last_post.user, { raw: 'updated contents' }, revised_at: @last_post.created_at + 10.seconds)
           @topic.reload
         }.should_not change(@topic, :bumped_at)
       end
 
       it "bumps the topic when a new version is made of the last post" do
         lambda {
-          @last_post.revise(Fabricate(:moderator), 'updated contents')
+          @last_post.revise(Fabricate(:moderator), { raw: 'updated contents' })
           @topic.reload
         }.should change(@topic, :bumped_at)
       end
 
       it "doesn't bump the topic when a post that isn't the last post receives a new version" do
         lambda {
-          @earlier_post.revise(Fabricate(:moderator), 'updated contents')
+          @earlier_post.revise(Fabricate(:moderator), { raw: 'updated contents' })
           @topic.reload
         }.should_not change(@topic, :bumped_at)
       end
@@ -629,14 +637,18 @@ describe Topic do
     describe "make_banner!" do
 
       it "changes the topic archetype to 'banner'" do
-        topic.expects(:add_moderator_post)
-        MessageBus.expects(:publish).with("/site/banner", banner)
-        topic.make_banner!(user)
-        topic.archetype.should == Archetype.banner
+        messages = MessageBus.track_publish do
+          topic.make_banner!(user)
+          topic.archetype.should == Archetype.banner
+        end
+
+        channels = messages.map(&:channel)
+        channels.should include('/site/banner')
+        channels.should include('/distributed_hash')
       end
 
       it "ensures only one banner topic at all time" do
-        banner_topic = Fabricate(:banner_topic)
+        _banner_topic = Fabricate(:banner_topic)
         Topic.where(archetype: Archetype.banner).count.should == 1
 
         topic.make_banner!(user)
@@ -689,16 +701,17 @@ describe Topic do
   end
 
   describe 'with category' do
+
     before do
       @category = Fabricate(:category)
     end
 
     it "should not increase the topic_count with no category" do
-      lambda { Fabricate(:topic, user: @category.user); @category.reload }.should_not change(@category, :topic_count)
+      -> { Fabricate(:topic, user: @category.user); @category.reload }.should_not change(@category, :topic_count)
     end
 
     it "should increase the category's topic_count" do
-      lambda { Fabricate(:topic, user: @category.user, category_id: @category.id); @category.reload }.should change(@category, :topic_count).by(1)
+      -> { Fabricate(:topic, user: @category.user, category_id: @category.id); @category.reload }.should change(@category, :topic_count).by(1)
     end
   end
 
@@ -775,74 +788,6 @@ describe Topic do
         post.archetype.should == topic.archetype
       end
     end
-  end
-
-  describe 'revisions' do
-    let(:post) { Fabricate(:post) }
-    let(:topic) { post.topic }
-
-    it "has no revisions by default" do
-      post.revisions.size.should == 0
-    end
-
-    context 'changing title' do
-
-      before do
-        topic.title = "new title for the topic"
-        topic.save
-      end
-
-      it "creates a new revision" do
-        post.revisions.size.should == 1
-      end
-
-    end
-
-    context 'changing category' do
-      let(:category) { Fabricate(:category) }
-
-      it "creates a new revision" do
-        topic.change_category_to_id(category.id)
-        post.revisions.size.should == 1
-      end
-
-      it "does nothing for private messages" do
-        topic.archetype = "private_message"
-        topic.category_id = nil
-
-        topic.change_category_to_id(category.id)
-        topic.category_id.should == nil
-      end
-
-      context "removing a category" do
-        before do
-          topic.change_category_to_id(category.id)
-          topic.change_category_to_id(nil)
-        end
-
-        it "creates a new revision" do
-          post.revisions.size.should == 2
-          last_rev = post.revisions.order(:number).last
-          last_rev.previous("category_id").should == category.id
-          last_rev.current("category_id").should == SiteSetting.uncategorized_category_id
-          post.reload
-          post.version.should == 3
-        end
-      end
-
-    end
-
-    context 'bumping the topic' do
-      before do
-        topic.bumped_at = 10.minutes.from_now
-        topic.save
-      end
-
-      it "doesn't create a new version" do
-        post.revisions.size.should == 0
-      end
-    end
-
   end
 
   describe 'change_category' do
@@ -990,7 +935,8 @@ describe Topic do
         it 'queues a job to close the topic' do
           Timecop.freeze(now) do
             Jobs.expects(:enqueue_at).with(7.hours.from_now, :close_topic, all_of( has_key(:topic_id), has_key(:user_id) ))
-            Fabricate(:topic, auto_close_hours: 7, user: Fabricate(:admin))
+            topic = Fabricate(:topic, user: Fabricate(:admin))
+            topic.set_auto_close(7).save
           end
         end
 
@@ -999,7 +945,8 @@ describe Topic do
           Jobs.expects(:enqueue_at).with do |datetime, job_name, job_args|
             job_args[:user_id] == topic_creator.id
           end
-          Fabricate(:topic, auto_close_hours: 7, user: topic_creator)
+          topic = Fabricate(:topic, user: topic_creator)
+          topic.set_auto_close(7).save
         end
 
         it 'when auto_close_user_id is set, it will use it as the topic closer' do
@@ -1008,19 +955,22 @@ describe Topic do
           Jobs.expects(:enqueue_at).with do |datetime, job_name, job_args|
             job_args[:user_id] == topic_closer.id
           end
-          Fabricate(:topic, auto_close_hours: 7, auto_close_user: topic_closer, user: topic_creator)
+          topic = Fabricate(:topic, user: topic_creator)
+          topic.set_auto_close(7, topic_closer).save
         end
 
         it "ignores the category's default auto-close" do
           Timecop.freeze(now) do
             Jobs.expects(:enqueue_at).with(7.hours.from_now, :close_topic, all_of( has_key(:topic_id), has_key(:user_id) ))
-            Fabricate(:topic, auto_close_hours: 7, user: Fabricate(:admin), category_id: Fabricate(:category, auto_close_hours: 2).id)
+            topic = Fabricate(:topic, user: Fabricate(:admin), ignore_category_auto_close: true, category_id: Fabricate(:category, auto_close_hours: 2).id)
+            topic.set_auto_close(7).save
           end
         end
 
         it 'sets the time when auto_close timer starts' do
           Timecop.freeze(now) do
-            topic = Fabricate(:topic, auto_close_hours: 7, user: Fabricate(:admin))
+            topic = Fabricate(:topic,  user: Fabricate(:admin))
+            topic.set_auto_close(7).save
             expect(topic.auto_close_started_at).to eq(now)
           end
         end
@@ -1124,25 +1074,9 @@ describe Topic do
     end
   end
 
-  describe "auto_close_hours=" do
-    subject(:topic) { Fabricate.build(:topic) }
-
-    it 'can take a number' do
-      Timecop.freeze(now) do
-        topic.auto_close_hours = 2
-        topic.auto_close_at.should be_within_one_second_of(2.hours.from_now)
-      end
-    end
-
-    it 'can take nil' do
-      topic.auto_close_hours = nil
-      topic.auto_close_at.should == nil
-    end
-  end
-
   describe 'set_auto_close' do
     let(:topic)         { Fabricate.build(:topic) }
-    let(:closing_topic) { Fabricate.build(:topic, auto_close_hours: 5) }
+    let(:closing_topic) { Fabricate.build(:topic, auto_close_hours: 5, auto_close_at: 5.hours.from_now, auto_close_started_at: 5.hours.from_now) }
     let(:admin)         { Fabricate.build(:user, id: 123) }
 
     before { Discourse.stubs(:system_user).returns(admin) }
@@ -1257,6 +1191,16 @@ describe Topic do
     it "returns regular topics" do
       topic = Fabricate(:topic)
       Topic.for_digest(user, 1.year.ago, top_order: true).should == [topic]
+    end
+
+    it "doesn't return topics from muted categories" do
+      user = Fabricate(:user)
+      category = Fabricate(:category)
+      topic = Fabricate(:topic, category: category)
+
+      CategoryUser.set_notification_level_for_category(user, CategoryUser.notification_levels[:muted], category.id)
+
+      Topic.for_digest(user, 1.year.ago, top_order: true).should be_blank
     end
 
   end

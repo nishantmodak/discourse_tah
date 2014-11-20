@@ -25,9 +25,14 @@ class Admin::UsersController < Admin::AdminController
                                     :revoke_api_key]
 
   def index
-    params.merge!({ admin: current_user.admin? })
-    query = ::AdminUserIndexQuery.new(params)
-    render_serialized(query.find_users, AdminUserSerializer)
+    users = ::AdminUserIndexQuery.new(params).find_users
+
+    if params[:show_emails] == "true"
+      guardian.can_see_emails = true
+      StaffActionLogger.new(current_user).log_show_emails(users)
+    end
+
+    render_serialized(users, AdminUserSerializer)
   end
 
   def show
@@ -211,22 +216,31 @@ class Admin::UsersController < Admin::AdminController
   end
 
   def reject_bulk
-    d = UserDestroyer.new(current_user)
     success_count = 0
+    d = UserDestroyer.new(current_user)
+
     User.where(id: params[:users]).each do |u|
       success_count += 1 if guardian.can_delete_user?(u) and d.destroy(u, params.slice(:context)) rescue UserDestroyer::PostsExistError
     end
-    render json: {success: success_count, failed: (params[:users].try(:size) || 0) - success_count}
+
+    render json: {
+      success: success_count,
+      failed: (params[:users].try(:size) || 0) - success_count
+    }
   end
 
   def destroy
     user = User.find_by(id: params[:id].to_i)
     guardian.ensure_can_delete_user!(user)
     begin
-      if UserDestroyer.new(current_user).destroy(user, params.slice(:delete_posts, :block_email, :block_urls, :block_ip, :context))
-        render json: {deleted: true}
+      options = params.slice(:delete_posts, :block_email, :block_urls, :block_ip, :context, :delete_as_spammer)
+      if UserDestroyer.new(current_user).destroy(user, options)
+        render json: { deleted: true }
       else
-        render json: {deleted: false, user: AdminDetailedUserSerializer.new(user, root: false).as_json}
+        render json: {
+          deleted: false,
+          user: AdminDetailedUserSerializer.new(user, root: false).as_json
+        }
       end
     rescue UserDestroyer::PostsExistError
       raise Discourse::InvalidAccess.new("User #{user.username} has #{user.post_count} posts, so can't be deleted.")
@@ -247,6 +261,18 @@ class Admin::UsersController < Admin::AdminController
     location = Excon.get("http://ipinfo.io/#{ip}/json", read_timeout: 30, connect_timeout: 30).body rescue nil
 
     render json: location
+  end
+
+  def sync_sso
+    unless SiteSetting.enable_sso
+      render nothing: true, status: 404
+      return
+    end
+
+    sso = DiscourseSingleSignOn.parse("sso=#{params[:sso]}&sig=#{params[:sig]}")
+    user = sso.lookup_or_create_user
+
+    render_serialized(user, AdminDetailedUserSerializer, root: false)
   end
 
   private

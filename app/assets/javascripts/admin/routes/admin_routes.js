@@ -30,8 +30,7 @@ Discourse.Route.buildRoutes(function() {
     this.resource('adminReports', { path: '/reports/:type' });
 
     this.resource('adminFlags', { path: '/flags' }, function() {
-      this.route('active');
-      this.route('old');
+      this.route('list', { path: '/:filter' });
     });
 
     this.resource('adminLogs', { path: '/logs' }, function() {
@@ -58,7 +57,9 @@ Discourse.Route.buildRoutes(function() {
       });
     });
 
-    this.route('badges');
+    this.resource('adminBadges', { path: '/badges' }, function() {
+      this.route('show', { path: '/:badge_id' });
+    });
 
   });
 });

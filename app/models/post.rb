@@ -93,12 +93,15 @@ class Post < ActiveRecord::Base
   end
 
   def publish_change_to_clients!(type)
+    # special failsafe for posts missing topics
+    # consistency checks should fix, but message
+    # is safe to skip
     MessageBus.publish("/topic/#{topic_id}", {
         id: id,
         post_number: post_number,
         updated_at: Time.now,
         type: type
-    }, group_ids: topic.secure_group_ids)
+    }, group_ids: topic.secure_group_ids) if topic
   end
 
   def trash!(trashed_by=nil)
@@ -240,7 +243,7 @@ class Post < ActiveRecord::Base
   end
 
   def self.summary
-    where(["(post_number = 1) or (percent_rank <= ?)", SiteSetting.summary_percent_filter.to_f / 100.0])
+    where(["(post_number = 1) or (percent_rank <= ?)", SiteSetting.summary_percent_filter.to_f / 100.0]).limit(SiteSetting.summary_max_results)
   end
 
   def update_flagged_posts_count
@@ -296,7 +299,7 @@ class Post < ActiveRecord::Base
 
   def unhide!
     self.update_attributes(hidden: false, hidden_at: nil, hidden_reason_id: nil)
-    self.topic.update_attributes(visible: true)
+    self.topic.update_attributes(visible: true) if post_number == 1
     save(validate: false)
     publish_change_to_clients!(:acted)
   end
@@ -324,8 +327,8 @@ class Post < ActiveRecord::Base
     end
   end
 
-  def revise(updated_by, new_raw, opts = {})
-    PostRevisor.new(self).revise!(updated_by, new_raw, opts)
+  def revise(updated_by, changes={}, opts={})
+    PostRevisor.new(self).revise!(updated_by, changes, opts)
   end
 
   def self.rebake_old(limit)
@@ -364,13 +367,14 @@ class Post < ActiveRecord::Base
   end
 
   def set_owner(new_user, actor)
-    revise(actor, self.raw, {
-        new_user: new_user,
-        changed_owner: true,
-        edit_reason: I18n.t('change_owner.post_revision_text',
-                            old_user: self.user.username_lower,
-                            new_user: new_user.username_lower)
-    })
+    return if user_id == new_user.id
+
+    edit_reason = I18n.t('change_owner.post_revision_text',
+      old_user: self.user.username_lower,
+      new_user: new_user.username_lower
+    )
+
+    revise(actor, { raw: self.raw, user_id: new_user.id, edit_reason: edit_reason })
   end
 
   before_create do
@@ -412,14 +416,6 @@ class Post < ActiveRecord::Base
     self.cooked = cook(raw, topic_id: topic_id) unless new_record?
     self.baked_at = Time.new
     self.baked_version = BAKED_VERSION
-  end
-
-  after_save do
-    save_revision if self.version_changed?
-  end
-
-  after_update do
-    update_revision if self.changed?
   end
 
   def advance_draft_sequence
@@ -467,8 +463,8 @@ class Post < ActiveRecord::Base
     Jobs.enqueue(:process_post, args)
   end
 
-  def self.public_posts_count_per_day(since_days_ago=30)
-    public_posts.where('posts.created_at > ?', since_days_ago.days.ago).group('date(posts.created_at)').order('date(posts.created_at)').count
+  def self.public_posts_count_per_day(start_date, end_date)
+    public_posts.where('posts.created_at >= ? AND posts.created_at <= ?', start_date, end_date).group('date(posts.created_at)').order('date(posts.created_at)').count
   end
 
   def self.private_messages_count_per_day(since_days_ago, topic_subtype)
@@ -476,7 +472,7 @@ class Post < ActiveRecord::Base
   end
 
 
-  def reply_history
+  def reply_history(max_replies=100)
     post_ids = Post.exec_sql("WITH RECURSIVE breadcrumb(id, reply_to_post_number) AS (
                               SELECT p.id, p.reply_to_post_number FROM posts AS p
                                 WHERE p.id = :post_id
@@ -486,7 +482,12 @@ class Post < ActiveRecord::Base
                                      AND p.topic_id = :topic_id
                             ) SELECT id from breadcrumb ORDER by id", post_id: id, topic_id: topic_id).to_a
 
-    post_ids.map! {|r| r['id'].to_i }.reject! {|post_id| post_id == id}
+    post_ids.map! {|r| r['id'].to_i }
+            .reject! {|post_id| post_id == id}
+
+    # [1,2,3][-10,-1] => nil
+    post_ids = (post_ids[(0-max_replies)..-1] || post_ids)
+
     Post.where(id: post_ids).includes(:user, :topic).order(:id).to_a
   end
 
@@ -530,33 +531,6 @@ class Post < ActiveRecord::Base
     if post_reply.save
       Post.where(id: post.id).update_all ['reply_count = reply_count + 1']
     end
-  end
-
-  def save_revision
-    modifications = changes.extract!(:raw, :cooked, :edit_reason, :user_id, :wiki, :post_type)
-    # make sure cooked is always present (oneboxes might not change the cooked post)
-    modifications["cooked"] = [self.cooked, self.cooked] unless modifications["cooked"].present?
-    PostRevision.create!(
-      user_id: last_editor_id,
-      post_id: id,
-      number: version,
-      modifications: modifications
-    )
-  end
-
-  def update_revision
-    revision = PostRevision.find_by(post_id: id, number: version)
-    return unless revision
-    revision.user_id = last_editor_id
-    modifications = changes.extract!(:raw, :cooked, :edit_reason)
-    [:raw, :cooked, :edit_reason].each do |field|
-      if modifications[field].present?
-        old_value = revision.modifications[field].try(:[], 0) || ""
-        new_value = modifications[field][1]
-        revision.modifications[field] = [old_value, new_value]
-      end
-    end
-    revision.save
   end
 
 end
@@ -611,6 +585,9 @@ end
 #  hidden_at               :datetime
 #  self_edits              :integer          default(0), not null
 #  reply_quoted            :boolean          default(FALSE), not null
+#  via_email               :boolean          default(FALSE), not null
+#  raw_email               :text
+#  public_version          :integer          default(1), not null
 #
 # Indexes
 #

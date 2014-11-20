@@ -5,7 +5,6 @@
 </div>
 
 {{#if postStream.loaded}}
-
   {{#if postStream.firstPostPresent}}
     <div id='topic-title'>
       <div class='container'>
@@ -17,10 +16,12 @@
           {{#if editingTopic}}
             {{#if isPrivateMessage}}
               <span class="private-message-glyph">{{fa-icon envelope}}</span>
+              {{autofocus-text-field id='edit-title' value=newTitle maxLength=maxTitleLength}}
             {{else}}
+              {{autofocus-text-field id='edit-title' value=newTitle maxLength=maxTitleLength}}
+              </br>
               {{category-chooser valueAttribute="id" value=newCategoryId source=category_id}}
             {{/if}}
-            {{text-field id='edit-title' value=newTitle maxLength=maxTitleLength}}
 
             <button class='btn btn-primary btn-small no-text' {{action "finishedEditingTopic"}}>{{fa-icon check}}</button>
             <button class='btn btn-small no-text' {{action "cancelEditingTopic"}}>{{fa-icon times}}</button>
@@ -40,7 +41,6 @@
                   {{/if}}
                 </a>
               {{/if}}
-
 
               {{#if details.can_edit}}
                 <a href='#' {{action "editTopic"}} class='edit-topic' title='{{i18n edit}}'>{{fa-icon pencil}}</a>
@@ -70,9 +70,7 @@
 
           {{render 'topic-progress'}}
 
-          {{#if postStream.loadingAbove}}
-            <div class='spinner'></div>
-          {{/if}}
+          {{loading-spinner condition=postStream.loadingAbove}}
 
           {{#unless postStream.loadingFilter}}
             {{cloaked-collection cloakView="post"
@@ -87,15 +85,11 @@
                                  offsetFixedBottom="#reply-control"}}
           {{/unless}}
 
-          {{#if postStream.loadingBelow}}
-            <div class='spinner'></div>
-          {{/if}}
+          {{loading-spinner condition=postStream.loadingBelow}}
         </div>
         <div id='topic-bottom'></div>
 
-        {{#if postStream.loadingFilter}}
-          <div class='spinner small'></div>
-        {{else}}
+        {{#loading-spinner condition=postStream.loadingFilter}}
           {{#if postStream.loadedAllPosts}}
 
             {{view 'topic-closing' topic=model}}
@@ -110,40 +104,34 @@
                 <h3>{{{view.browseMoreMessage}}}</h3>
               </div>
             {{/if}}
+
           {{/if}}
-        {{/if}}
+        {{/loading-spinner}}
 
       </section>
     </div>
 
   </div>
-
 {{else}}
-  {{#if hasError}}
-    <div class='container'>
-    {{#if notFoundHtml}}
-      {{{notFoundHtml}}}
-    {{else}}
-      <div class="topic-error">
-        {{message}}
-        {{#if noRetry}}
-          {{#unless currentUser}}
-            <button {{action "showLogin"}} class='btn btn-primary topic-retry'>{{fa-icon user}} {{i18n log_in}}</button>
-          {{/unless}}
-        {{else}}
-          <button class="btn btn-primary topic-retry" {{action "retryLoading"}}>{{i18n errors.buttons.again}}</button>
-        {{/if}}
-      </div>
-      {{#if retrying}}
-        <div class='spinner'></div>
+  <div class='container'>
+    {{#loading-spinner condition=noErrorYet}}
+      {{#if notFoundHtml}}
+        {{{notFoundHtml}}}
+      {{else}}
+        <div class="topic-error">
+          <div>{{message}}</div>
+          {{#if noRetry}}
+            {{#unless currentUser}}
+              <button {{action "showLogin"}} class='btn btn-primary topic-retry'>{{fa-icon user}} {{i18n log_in}}</button>
+            {{/unless}}
+          {{else}}
+            <button class="btn btn-primary topic-retry" {{action "retryLoading"}}>{{fa-icon "refresh"}} {{i18n errors.buttons.again}}</button>
+          {{/if}}
+        </div>
+        {{loading-spinner condition=retrying}}
       {{/if}}
-    {{/if}}
-    </div>
-  {{else}}
-    <div class='container'>
-      <div class='spinner'></div>
-    </div>
-  {{/if}}
+    {{/loading-spinner}}
+  </div>
 {{/if}}
 
 {{render "share"}}

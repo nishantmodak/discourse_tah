@@ -27,8 +27,6 @@ Discourse.KeyboardShortcuts = Ember.Object.createWithMixins({
   },
 
   CLICK_BINDINGS: {
-    'c': '#create-topic',                                         // create new topic
-
     // star topic
     'f': '#topic-footer-buttons button.star, .topic-list tr.topic-list-item.selected a.star',
 
@@ -47,12 +45,14 @@ Discourse.KeyboardShortcuts = Ember.Object.createWithMixins({
   },
 
   FUNCTION_BINDINGS: {
+    'c': 'createTopic',                                         // create new topic
     'home': 'goToFirstPost',
     '#': 'toggleProgress',
     'end': 'goToLastPost',
     'shift+j': 'nextSection',
     'j': 'selectDown',
     'shift+k': 'prevSection',
+    'shift+p': 'pinUnpinTopic',
     'k': 'selectUp',
     'u': 'goBack',
     '/': 'showSearch',
@@ -129,6 +129,14 @@ Discourse.KeyboardShortcuts = Ember.Object.createWithMixins({
     }
 
     return showSearch ? this.showSearch(true) : true;
+  },
+
+  createTopic: function() {
+    Discourse.__container__.lookup('controller:composer').open({action: Discourse.Composer.CREATE_TOPIC, draftKey: Discourse.Composer.CREATE_TOPIC});
+  },
+
+  pinUnpinTopic: function() {
+    Discourse.__container__.lookup('controller:topic').togglePinnedState();
   },
 
   toggleProgress: function() {
@@ -237,7 +245,7 @@ Discourse.KeyboardShortcuts = Ember.Object.createWithMixins({
       if ($article.is('.topic-post')) {
         var tabLoc = $article.find('a.tabLoc');
         if (tabLoc.length === 0) {
-          tabLoc = $('<a href="#" class="tabLoc"></a>');
+          tabLoc = $('<a href class="tabLoc"></a>');
           $article.prepend(tabLoc);
         }
         tabLoc.focus();

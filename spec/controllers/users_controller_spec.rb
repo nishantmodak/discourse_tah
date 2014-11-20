@@ -357,8 +357,8 @@ describe UsersController do
 
         expect(JSON.parse(response.body)['active']).to be_falsey
 
-        # should save user_created_email in session
-        session["user_created_email"].should == @user.email
+        # should save user_created_message in session
+        session["user_created_message"].should be_present
       end
 
       context "and 'must approve users' site setting is enabled" do
@@ -393,8 +393,8 @@ describe UsersController do
         User.any_instance.expects(:enqueue_welcome_message).with('welcome_user')
         post_user
 
-        # should save user_created_email in session
-        session["user_created_email"].should == @user.email
+        # should save user_created_message in session
+        session["user_created_message"].should be_present
       end
 
       it "shows the 'active' message" do
@@ -479,7 +479,7 @@ describe UsersController do
         json["success"].should == true
 
         # should not change the session
-        session["user_created_email"].should be_blank
+        session["user_created_message"].should be_blank
       end
     end
 
@@ -521,9 +521,9 @@ describe UsersController do
         xhr :post, :create, create_params
         json = JSON::parse(response.body)
         json["success"].should_not == true
-        
+
         # should not change the session
-        session["user_created_email"].should be_blank
+        session["user_created_message"].should be_blank
       end
     end
 
@@ -559,6 +559,7 @@ describe UsersController do
     context "with custom fields" do
       let!(:user_field) { Fabricate(:user_field) }
       let!(:another_field) { Fabricate(:user_field) }
+      let!(:optional_field) { Fabricate(:user_field, required: false) }
 
       context "without a value for the fields" do
         let(:create_params) { {name: @user.name, password: 'watwatwat', username: @user.username, email: @user.email} }
@@ -577,7 +578,7 @@ describe UsersController do
           }
         } }
 
-        it "should succeed" do
+        it "should succeed without the optional field" do
           xhr :post, :create, create_params
           response.should be_success
           inserted = User.where(email: @user.email).first
@@ -585,6 +586,19 @@ describe UsersController do
           inserted.custom_fields.should be_present
           inserted.custom_fields["user_field_#{user_field.id}"].should == 'value1'
           inserted.custom_fields["user_field_#{another_field.id}"].should == 'value2'
+          inserted.custom_fields["user_field_#{optional_field.id}"].should be_blank
+        end
+
+        it "should succeed with the optional field" do
+          create_params[:user_fields][optional_field.id.to_s] = 'value3'
+          xhr :post, :create, create_params.merge(create_params)
+          response.should be_success
+          inserted = User.where(email: @user.email).first
+          inserted.should be_present
+          inserted.custom_fields.should be_present
+          inserted.custom_fields["user_field_#{user_field.id}"].should == 'value1'
+          inserted.custom_fields["user_field_#{another_field.id}"].should == 'value2'
+          inserted.custom_fields["user_field_#{optional_field.id}"].should == 'value3'
         end
 
       end
@@ -768,7 +782,7 @@ describe UsersController do
       xhr :get, :invited, username: inviter.username, filter: 'billybob'
 
       invites = JSON.parse(response.body)['invites']
-      expect(invites).to have(1).item
+      invites.size.should == 1
       expect(invites.first).to include('email' => 'billybob@example.com')
     end
 
@@ -790,7 +804,7 @@ describe UsersController do
       xhr :get, :invited, username: inviter.username, filter: 'billybob'
 
       invites = JSON.parse(response.body)['invites']
-      expect(invites).to have(1).item
+      invites.size.should == 1
       expect(invites.first).to include('email' => 'billybob@example.com')
     end
 
@@ -816,7 +830,7 @@ describe UsersController do
           xhr :get, :invited, username: inviter.username
 
           invites = JSON.parse(response.body)['invites']
-          expect(invites).to have(1).item
+          invites.size.should == 1
           expect(invites.first).to include('email' => invite.email)
         end
       end
@@ -837,7 +851,7 @@ describe UsersController do
             xhr :get, :invited, username: inviter.username
 
             invites = JSON.parse(response.body)['invites']
-            expect(invites).to have(1).item
+            invites.size.should == 1
             expect(invites.first).to include("email" => invite.email)
           end
         end
@@ -871,7 +885,7 @@ describe UsersController do
           xhr :get, :invited, username: inviter.username
 
           invites = JSON.parse(response.body)['invites']
-          expect(invites).to have(1).item
+          invites.size.should == 1
           expect(invites.first).to include('email' => invite.email)
         end
       end
@@ -904,6 +918,7 @@ describe UsersController do
         context "with user fields" do
           context "an editable field" do
             let!(:user_field) { Fabricate(:user_field) }
+            let!(:optional_field) { Fabricate(:user_field, required: false ) }
 
             it "should update the user field" do
               put :update, username: user.username, name: 'Jim Tom', user_fields: { user_field.id.to_s => 'happy' }
@@ -956,6 +971,26 @@ describe UsersController do
     end
   end
 
+  describe "badge_card" do
+    let(:user) { Fabricate(:user) }
+    let(:badge) { Fabricate(:badge) }
+    let(:user_badge) { BadgeGranter.grant(badge, user) }
+
+    it "sets the user's card image to the badge" do
+      log_in_user user
+      xhr :put, :update_card_badge, user_badge_id: user_badge.id, username: user.username
+      user.user_profile.reload.card_image_badge_id.should be_blank
+      badge.update_attributes image: "wat.com/wat.jpg"
+
+      xhr :put, :update_card_badge, user_badge_id: user_badge.id, username: user.username
+      user.user_profile.reload.card_image_badge_id.should == badge.id
+
+      # Can set to nothing
+      xhr :put, :update_card_badge, username: user.username
+      user.user_profile.reload.card_image_badge_id.should be_blank
+    end
+  end
+
   describe "badge_title" do
     let(:user) { Fabricate(:user) }
     let(:badge) { Fabricate(:badge) }
@@ -968,6 +1003,13 @@ describe UsersController do
       badge.update_attributes allow_title: true
       xhr :put, :badge_title, user_badge_id: user_badge.id, username: user.username
       user.reload.title.should == badge.name
+      user.user_profile.badge_granted_title.should == true
+
+      user.title = "testing"
+      user.save
+      user.user_profile.reload
+      user.user_profile.badge_granted_title.should == false
+
     end
   end
 
@@ -1134,6 +1176,21 @@ describe UsersController do
           json['height'].should == 200
         end
 
+        it 'is successful for card backgrounds' do
+          upload = Fabricate(:upload)
+          Upload.expects(:create_for).returns(upload)
+          xhr :post, :upload_user_image, username: user.username, file: user_image, image_type: "card_background"
+          user.reload
+
+          user.user_profile.card_background.should == "/uploads/default/1/1234567890123456.png"
+
+          # returns the url, width and height of the uploaded image
+          json = JSON.parse(response.body)
+          json['url'].should == "/uploads/default/1/1234567890123456.png"
+          json['width'].should == 100
+          json['height'].should == 200
+        end
+
       end
 
       describe "with url" do
@@ -1175,6 +1232,20 @@ describe UsersController do
             xhr :post, :upload_user_image, username: user.username, file: user_image_url, image_type: "profile_background"
             user.reload
             user.user_profile.profile_background.should == "/uploads/default/1/1234567890123456.png"
+
+            # returns the url, width and height of the uploaded image
+            json = JSON.parse(response.body)
+            json['url'].should == "/uploads/default/1/1234567890123456.png"
+            json['width'].should == 100
+            json['height'].should == 200
+          end
+
+          it 'is successful for card backgrounds' do
+            upload = Fabricate(:upload)
+            Upload.expects(:create_for).returns(upload)
+            xhr :post, :upload_user_image, username: user.username, file: user_image_url, image_type: "card_background"
+            user.reload
+            user.user_profile.card_background.should == "/uploads/default/1/1234567890123456.png"
 
             # returns the url, width and height of the uploaded image
             json = JSON.parse(response.body)
@@ -1334,6 +1405,16 @@ describe UsersController do
       it "returns both email and associated_accounts when you're allowed to see them" do
         Guardian.any_instance.expects(:can_check_emails?).returns(true)
         xhr :put, :check_emails, username: Fabricate(:user).username
+        response.should be_success
+        json = JSON.parse(response.body)
+        json["email"].should be_present
+        json["associated_accounts"].should be_present
+      end
+
+      it "works on inactive users" do
+        inactive_user = Fabricate(:user, active: false)
+        Guardian.any_instance.expects(:can_check_emails?).returns(true)
+        xhr :put, :check_emails, username: inactive_user.username
         response.should be_success
         json = JSON.parse(response.body)
         json["email"].should be_present

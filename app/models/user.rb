@@ -242,6 +242,7 @@ class User < ActiveRecord::Base
 
   def reload
     @unread_notifications_by_type = nil
+    @unread_total_notifications = nil
     @unread_pms = nil
     super
   end
@@ -252,6 +253,10 @@ class User < ActiveRecord::Base
 
   def unread_notifications
     unread_notifications_by_type.except(Notification.types[:private_message]).values.sum
+  end
+
+  def total_unread_notifications
+    @unread_total_notifications ||= notifications.where("read = false").count
   end
 
   def saw_notification_id(notification_id)
@@ -266,7 +271,8 @@ class User < ActiveRecord::Base
   def publish_notifications_state
     MessageBus.publish("/notification/#{id}",
                        {unread_notifications: unread_notifications,
-                        unread_private_messages: unread_private_messages},
+                        unread_private_messages: unread_private_messages,
+                        total_unread_notifications: total_unread_notifications},
                        user_ids: [id] # only publish the notification to this user
     )
   end
@@ -525,8 +531,8 @@ class User < ActiveRecord::Base
         .limit(3)
   end
 
-  def self.count_by_signup_date(sinceDaysAgo=30)
-    where('created_at > ?', sinceDaysAgo.days.ago).group('date(created_at)').order('date(created_at)').count
+  def self.count_by_signup_date(start_date, end_date)
+    where('created_at >= ? and created_at < ?', start_date, end_date).group('date(created_at)').order('date(created_at)').count
   end
 
 
@@ -674,6 +680,13 @@ class User < ActiveRecord::Base
       end
     end
     @user_fields
+  end
+
+  def title=(val)
+    write_attribute(:title, val)
+    if !new_record? && user_profile
+      user_profile.update_column(:badge_granted_title, false)
+    end
   end
 
   protected
@@ -862,12 +875,13 @@ end
 #  uploaded_avatar_id            :integer
 #  email_always                  :boolean          default(FALSE), not null
 #  mailing_list_mode             :boolean          default(FALSE), not null
-#  primary_group_id              :integer
 #  locale                        :string(10)
+#  primary_group_id              :integer
 #  registration_ip_address       :inet
 #  last_redirected_to_top_at     :datetime
 #  disable_jump_reply            :boolean          default(FALSE), not null
 #  edit_history_public           :boolean          default(FALSE), not null
+#  trust_level_locked            :boolean          default(FALSE), not null
 #
 # Indexes
 #

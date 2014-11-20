@@ -32,7 +32,8 @@ class UserHistory < ActiveRecord::Base
                           :auto_trust_level_change,
                           :check_email,
                           :delete_post,
-                          :delete_topic)
+                          :delete_topic,
+                          :impersonate)
   end
 
   # Staff actions is a subset of all actions, used to audit actions taken by staff users.
@@ -48,7 +49,8 @@ class UserHistory < ActiveRecord::Base
                         :revoke_badge,
                         :check_email,
                         :delete_post,
-                        :delete_topic]
+                        :delete_topic,
+                        :impersonate]
   end
 
   def self.staff_action_ids
@@ -124,6 +126,7 @@ end
 #  new_value      :text
 #  topic_id       :integer
 #  admin_only     :boolean          default(FALSE)
+#  post_id        :integer
 #
 # Indexes
 #

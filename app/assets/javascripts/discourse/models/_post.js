@@ -64,6 +64,10 @@ Discourse.Post = Discourse.Model.extend({
   hasHistory: Em.computed.gt('version', 1),
   postElementId: Discourse.computed.fmt('post_number', 'post_%@'),
 
+  canViewRawEmail: function() {
+    return this.get("user_id") === Discourse.User.currentProp("id") || Discourse.User.currentProp('staff');
+  }.property("user_id"),
+
   bookmarkedChanged: function() {
     Discourse.Post.bookmark(this.get('id'), this.get('bookmarked'))
              .then(null, function (error) {
@@ -107,9 +111,7 @@ Discourse.Post = Discourse.Model.extend({
   }.property('link_counts.@each.internal'),
 
   // Edits are the version - 1, so version 2 = 1 edit
-  editCount: function() {
-    return this.get('version') - 1;
-  }.property('version'),
+  editCount: function() { return this.get('version') - 1; }.property('version'),
 
   flagsAvailable: function() {
     var post = this;
@@ -163,7 +165,6 @@ Discourse.Post = Discourse.Model.extend({
         title: this.get('title'),
         image_sizes: this.get('imageSizes'),
         target_usernames: this.get('target_usernames'),
-        auto_close_time: Discourse.Utilities.timestampFromAutocloseString(this.get('auto_close_time'))
       };
 
       var metaData = this.get('metaData');
@@ -472,10 +473,24 @@ Discourse.Post.reopenClass({
     });
   },
 
+  hideRevision: function(postId, version) {
+    return Discourse.ajax("/posts/" + postId + "/revisions/" + version + "/hide", { type: 'PUT' });
+  },
+
+  showRevision: function(postId, version) {
+    return Discourse.ajax("/posts/" + postId + "/revisions/" + version + "/show", { type: 'PUT' });
+  },
+
   loadQuote: function(postId) {
     return Discourse.ajax("/posts/" + postId + ".json").then(function (result) {
       var post = Discourse.Post.create(result);
       return Discourse.Quote.build(post, post.get('raw'));
+    });
+  },
+
+  loadRawEmail: function(postId) {
+    return Discourse.ajax("/posts/" + postId + "/raw-email").then(function (result) {
+      return result.raw_email;
     });
   },
 

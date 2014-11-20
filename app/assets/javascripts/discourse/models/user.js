@@ -258,12 +258,20 @@ Discourse.User = Discourse.Model.extend({
     return Discourse.ajax("/user_actions/" + id + ".json", { cache: 'false' }).then(function(result) {
       if (result && result.user_action) {
         var ua = result.user_action;
+
         if ((self.get('stream.filter') || ua.action_type) !== ua.action_type) return;
+        if (!self.get('stream.filter') && !self.inAllStream(ua)) return;
+
         var action = Discourse.UserAction.collapseStream([Discourse.UserAction.create(ua)]);
         stream.set('itemsLoaded', stream.get('itemsLoaded') + 1);
         stream.get('content').insertAt(0, action[0]);
       }
     });
+  },
+
+  inAllStream: function(ua) {
+    return ua.action_type === Discourse.UserAction.TYPES.posts ||
+           ua.action_type === Discourse.UserAction.TYPES.topics;
   },
 
   /**
@@ -273,11 +281,12 @@ Discourse.User = Discourse.Model.extend({
     @type {Integer}
   **/
   statsCountNonPM: function() {
+    var self = this;
+
     if (this.blank('statsExcludingPms')) return 0;
     var count = 0;
     _.each(this.get('statsExcludingPms'), function(val) {
-      if (val.action_type === Discourse.UserAction.TYPES.posts ||
-          val.action_type === Discourse.UserAction.TYPES.topics ) {
+      if (self.inAllStream(val)){
         count += val.count;
       }
     });
@@ -327,6 +336,10 @@ Discourse.User = Discourse.Model.extend({
         json.user.featured_user_badges = json.user.featured_user_badge_ids.map(function(id) {
           return userBadgesMap[id];
         });
+      }
+
+      if (json.user.card_badge) {
+        json.user.card_badge = Discourse.Badge.create(json.user.card_badge);
       }
 
       user.setProperties(json.user);

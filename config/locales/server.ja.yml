@@ -225,14 +225,12 @@ ja:
   activation:
     action: "アカウントを有効する"
     already_done: "申し訳ありませんが、このアカウント認証リンクは無効です。既にアカウントがアクティブになっていませんか?"
-    please_continue: "新しいアカウントを作成しました。自動的にログインされています。"
     continue_button: "%{site_name} へ"
     welcome_to: "%{site_name} へようこそ!"
     approval_required: "このフォーラムにアクセスするにはモデレータによる承認が必要です。承認されるとメールにて通知されます!"
   post_action_types:
     off_topic:
       title: '関係ない話題'
-      description: 'この投稿は、このトピックの話題に合わない。または、この質問はこのカテゴリーに合わない。'
       long_form: '「関係ない話題」としてフラグを立つ'
     spam:
       title: 'スパム'
@@ -243,15 +241,10 @@ ja:
       description: 'この投稿は、誹謗中傷、恫喝、名誉毀損、わいせつ、犯罪行為など他人を不快にさせる内容を含んでいる。'
       long_form: '不適切フラグをたてる'
     notify_user:
-      title: '{{username}} に通知'
       description: 'この投稿やトピックを書いた人に、直接メッセージを送る。（フラグを付けません）'
-      long_form: 'ユーザに通知'
       email_title: '「%{title}」にの投稿'
       email_body: "%{link}\n\n%{message}"
     notify_moderators:
-      title: '管理人に通知'
-      description: 'この投稿やトピックは不適切な可能性があるため、管理人による確認を必要とする。'
-      long_form: 'モデレータに通知'
       email_title: '"%{title}" のポストに関する管理人の確認が必要とする'
       email_body: "%{link}\n\n%{message}"
     bookmark:
@@ -276,9 +269,7 @@ ja:
       description: 'この投稿は、誹謗中傷、恫喝、名誉毀損、わいせつ、犯罪行為など他人を不快にさせる内容を含んでいる。'
       long_form: '不適切フラグをたてる'
     notify_moderators:
-      title: '管理人に通知'
       description: 'この投稿やトピックは不適切な可能性があるため、管理人による確認を必要とする。'
-      long_form: 'モデレータに告知する'
       email_title: 'トピック"%{title}" は不適切な可能性があるため、管理人による確認を必要とする。'
       email_body: "%{link}\n\n%{message}"
   flagging:
@@ -416,7 +407,6 @@ ja:
       description: "全ページのトップに追加される HTML (ヘッダとナビゲーション/トピックタイトルの間に表示されます)"
     bottom:
       title: "ページボトム"
-      description: "全ページのボトムに追加される HTML"
   site_settings:
     default_locale: "この Discourse インスタンスのデフォルト言語 (ISO 639-1 Code)"
     allow_uncategorized_topics: "カテゴリなしのトピック作成を許可するか。"
@@ -428,8 +418,6 @@ ja:
     apple_touch_icon_url: "Apple のタッチデバイス用のアイコン。推奨サイズは 144px x 144px"
     email_custom_headers: "カスタムメールヘッダのリスト (パイプ(バーティカルバー) 区切り)"
     enable_long_polling: "通知用のメッセージバスによるロングポーリングの利用を許可する"
-    long_polling_interval: "新たなロングポーリングを開始するまでの間隔 (ミリ秒)"
-    polling_interval: "ログイン済ユーザのクライアントのポーリング間隔 (ミリ秒)"
     anon_polling_interval: "匿名ユーザのクライアントのポーリング間隔 (ミリ秒)"
     auto_track_topics_after: "トピックが自動的にトラックされるまでのデフォルト時間 (ミリ秒)。なお、ユーザはこの設定をカスタマイズできます。(0で常にトラック、-1で常にトラックしない)"
     new_topic_duration_minutes: "トピックが新規と見なされるデフォルト時間 (分)。なお、ユーザはこの設定をカスタマイズできます。(-1で常に新規とみなす、-2で最終訪問したものを新規とみなす)"
@@ -499,18 +487,6 @@ ja:
     archived_disabled: "このトピックはアーカイブ解除されました。凍結解除され、変更可能になりました。"
     closed_enabled: "このトピックは終了しました。新たに回答を投稿することはできません。"
     closed_disabled: "このトピックはオープンされました。新たに回答を投稿することができます。"
-    autoclosed_enabled_days:
-      zero: "このトピックは1日が経過したので自動的に終了しました。新たに回答を投稿することはできません。"
-      one: "このトピックは1日が経過したので自動的に終了しました。新たに回答を投稿することはできません。"
-      other: "このトピックは%{count}日が経過したので自動的に終了しました。新たに回答を投稿することはできません。"
-    autoclosed_enabled_hours:
-      zero: "このトピックは1時間が経過したので自動的に終了しました。新たに回答を投稿することはできません。"
-      one: "このトピックは1時間が経過したので自動的に終了しました。新たに回答を投稿することはできません。"
-      other: "このトピックは%{count}時間が経過したので自動的に終了しました。新たに回答を投稿することはできません。"
-    autoclosed_enabled_minutes:
-      zero: "このトピックは1分が経過したので自動的に終了しました。新たに回答を投稿することはできません。"
-      one: "このトピックは1分が経過したので自動的に終了しました。新たに回答を投稿することはできません。"
-      other: "このトピックは%{count}分が経過したので自動的に終了しました。新たに回答を投稿することはできません。"
     autoclosed_disabled: "このトピックは再オープンされました。新しい回答が投稿できるようになりました。。"
     pinned_disabled: "このトピックのピン留めが解除されました。以後、カテゴリのトップに表示されません。"
   login:
@@ -553,12 +529,6 @@ ja:
       subject_template: "%{site_name} へようこそ!"
     welcome_invite:
       subject_template: "%{site_name}へようこそ!"
-    export_succeeded:
-      subject_template: "エクスポートが正しく完了しました"
-      text_body_template: "エクスポートに成功しました。"
-    import_succeeded:
-      subject_template: "インポートが正しく完了しました"
-      text_body_template: "インポートに成功しました。"
     too_many_spam_flags:
       subject_template: "新規アカウントのブロック"
     blocked_by_staff:
@@ -624,11 +594,15 @@ ja:
         ---
         %{respond_instructions}
     digest:
+      subject_template: "[%{site_name}] メールマガジン【%{date}】"
       new_activity: "あなたのトピックおよびポストにおけるアクティビティ:"
-      unsubscribe: "こちらのメールマガジンでは、%{site_link} が最新情報をご紹介しています！配信停止はこちら %{unsubscribe_link}."
+      top_topics: "人気の投稿"
+      other_new_topics: "人気のトピック"
       click_here: "ここをクリック"
       from: "%{site_name} ダイジェスト"
       read_more: "もっと読む"
+      posts:
+        other: "%{count} 投稿"
     forgot_password:
       subject_template: "[%{site_name}] パスワードのリセット"
       text_body_template: |

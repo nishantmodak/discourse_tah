@@ -90,6 +90,7 @@ pt_BR:
       facebook: 'compartilhe este link no Facebook'
       google+: 'compartilhe este link no Google+'
       email: 'enviar esse link para um email'
+    topic_admin_menu: "ações de tópico do admin"
     edit: 'edite o título e a categoria deste tópico'
     not_implemented: "Esse recurso ainda não foi implementado, desculpe!"
     no_value: "Não"
@@ -103,6 +104,7 @@ pt_BR:
     admin_title: "Admin"
     flags_title: "Sinalizações"
     show_more: "mostrar mais"
+    show_help: "Ajuda"
     links: "Links"
     links_lowercase: "links"
     faq: "FAQ"
@@ -122,22 +124,10 @@ pt_BR:
     daily: "diário"
     weekly: "semanal"
     every_two_weeks: "a cada duas semanas"
-    max: "máximo"
+    max_of_count: "max de {{count}}"
     character_count:
       one: "{{count}} caracter"
       other: "{{count}} caracteres"
-    in_n_seconds:
-      one: "em 1 segundo"
-      other: "em {{count}} segundos"
-    in_n_minutes:
-      one: "em 1 minuto"
-      other: "em {{count}} minutos"
-    in_n_hours:
-      one: "em 1 hora"
-      other: "em {{count}} horas"
-    in_n_days:
-      one: "em 1 dia"
-      other: "em {{count}} dias"
     suggested_topics:
       title: "Tópicos sugeridos"
     about:
@@ -149,10 +139,9 @@ pt_BR:
       stat:
         all_time: "Sempre"
         last_7_days: "Últimos 7 Dias"
-      like_count: "Contagem de Likes"
-      topic_count: "Contagem de Tópicos"
-      post_count: "Contagem de Tópicos"
-      user_count: "Contagem de Usuários"
+      like_count: "Likes"
+      topic_count: "Tópicos"
+      user_count: "Usuários"
     bookmarks:
       not_logged_in: "desculpe, você precisa estar logado para favoritar mensagens"
       created: "você favoritou essa resposta"
@@ -256,7 +245,6 @@ pt_BR:
       location_not_found: (desconhecido)
       organisation: Organização
       phone: Telefone
-      other_accounts: Outras contas com esse endereço de IP
       no_other_accounts: (nenhum)
     user:
       said: "{{username}}:"
@@ -273,6 +261,8 @@ pt_BR:
       invited_by: "Convidado por"
       trust_level: "Nível de Confiança"
       notifications: "Notificações"
+      dismiss_notifications: "Marcar todas como lidas"
+      dismiss_notifications_tooltip: "Marcar todas as notificações não lidas como lidos"
       disable_jump_reply: "Não pular para próxima mensagens depois de responder"
       dynamic_favicon: "Exibir notificações de mensagens recebidas no favicon (experimental)"
       edit_history_public: "Deixar que os outros usuários visualizem minhas revisões na resposta"
@@ -338,16 +328,18 @@ pt_BR:
         image_is_not_a_square: "Atenção: nos cortamos sua imagem; não é quadrada."
       change_profile_background:
         title: "Fundo do perfil"
+        instructions: "Fundos do perfil será centralizado e tera uma largura padrão de 850px."
+      change_card_background:
+        instructions: "As Imagens de fundo serão centralizadas e deverão ter largura de 590px"
       email:
         title: "Email"
         instructions: "Não visível publicamente."
-        ok: "Parece ok. Vamos enviar um email para você confirmar."
         invalid: "Por favor, coloque um email válido."
         authenticated: "O seu email foi autenticado por {{provider}}."
         frequency: "Vamos lhe enviar emails apenas quando não o virmos há algum tempo e você não tiver visto as coisas que temos enviado."
       name:
         title: "Nome"
-        instructions: "Seu nome completo."
+        instructions: "Nome Completo ( campo opcional )"
         too_short: "O seu nome é muito curto."
         ok: "O seu nome parece ok."
       username:
@@ -421,6 +413,8 @@ pt_BR:
         expired: "Este convite expirou."
         rescind: "Remover"
         rescinded: "Convite removido"
+        reinvite: "Reenviar convite"
+        reinvited: "Convite re-enviado"
         time_read: "Tempo de leitura"
         days_visited: "Dias visitados"
         account_age_days: "Idade da conta em dias"
@@ -572,7 +566,7 @@ pt_BR:
       drafts_offline: "rascunhos offline"
       min_length:
         need_more_for_title: "Escreva no mínimo mais {{n}} caracteres"
-        need_more_for_reply: "Escreva no mínimo mais {{n}} caracteres"
+        need_more_for_reply: "{{n}} faltando"
       error:
         title_missing: "Título é obrigatório"
         title_too_short: "O título tem que ter no mínimo {{min}} caracteres"
@@ -585,8 +579,6 @@ pt_BR:
       reply_here: "Responda aqui"
       reply: "Responder"
       cancel: "Cancelar"
-      create_topic: "Criar um tópico"
-      create_pm: "Criar uma Mensagem Privada"
       title: "Ou pressione Ctrl+Enter"
       users_placeholder: "Adicionar um usuário"
       title_placeholder: "Sobre o que é esta discussão em uma pequena frase?"
@@ -596,7 +588,7 @@ pt_BR:
       view_new_post: "Ver sua nova resposta."
       saving: "Salvando..."
       saved: "Salvo!"
-      saved_draft: "Você tem um rascunho em progresso. Clique nessa barra para voltar a editar."
+      saved_draft: "Rascunho salvo, clique em selecionar para continuar editando."
       uploading: "Enviando..."
       show_preview: 'mostrar pré-visualização &raquo;'
       hide_preview: '&laquo; esconder pré-visualização'
@@ -626,10 +618,15 @@ pt_BR:
       help: "Ajuda da edição Markdown"
       toggler: "esconder ou exibir o painel de composição"
       admin_options_title: "Configurações opcionais da equipe para este tópico"
-      auto_close_label: "Tempo para fechamento automático do tópico:"
-      auto_close_units: "(# de horas, um horário ou data e hora por extenso)"
-      auto_close_examples: 'insira uma data ou número de horas - 24, 17:00, 2013-11-22 14:00'
-      auto_close_error: "Por favor, digite um valor válido."
+      auto_close:
+        label: "Tempo para fechamento automático do tópico:"
+        error: "Por favor, digite um valor válido."
+        based_on_last_post: "Não feche até que o último post no tópico seja o mais velho."
+        all:
+          examples: 'Insira o número de horaas (24), hora absoluta (17:30) ou o timestamp (2013-11-22 14:00).'
+        limited:
+          units: "(núm. de horas)"
+          examples: 'Insira o número de horas (24).'
     notifications:
       title: "notificações de menção de @nome, respostas às suas mensagens e tópicos, mensagens privadas, etc"
       none: "Não há notifcações neste momento."
@@ -652,10 +649,7 @@ pt_BR:
       title_with_attachments: "Adicionar uma imagem ou arquivo"
       from_my_computer: "Do meu dispositivo"
       from_the_web: "Da internet"
-      remote_tip: "link para a imagem http://exemplo.com.br/imagem.jpg"
-      remote_tip_with_attachments: "link para a imagem ou arquivo http://exemplo.com.br/arquivo.ext (extensões possíveis: {{authorized_extensions}})."
       local_tip: "clique para selecionar um arquivo do seu dispositivo"
-      local_tip_with_attachments: "clique para selecionar uma imagem ou arquivo do seu dispositivo (extensões permitidas: {{authorized_extensions}})"
       hint: "(Você também pode arrastar e soltar para o editor para carregá-las)"
       hint_for_supported_browsers: "(você também pode arrastar e soltar ou colar imagens no editor para carregá-las)"
       uploading: "Enviando"
@@ -722,7 +716,6 @@ pt_BR:
         top: "Não há mais tópicos em alta."
     topic:
       filter_to: "{{post_count}} mensagens no tópico"
-      create: 'Criar tópico'
       create_long: 'Criar um novo tópico'
       private_message: 'Começar uma nova conversa privada'
       list: 'Tópicos'
@@ -735,7 +728,6 @@ pt_BR:
         one: '1 tópico não lido'
         other: '{{count}} tópicos não lidos'
       title: 'Tópico'
-      loading_more: "Carregando mais tópicos..."
       loading: 'Carregando tópico...'
       invalid_access:
         title: "Tópico é particular"
@@ -773,6 +765,7 @@ pt_BR:
       jump_reply_down: pular para a resposta mais antiga
       deleted: "Este tópico foi apagado"
       auto_close_notice: "Este tópico vai ser automaticamente fechado em %{timeLeft}."
+      auto_close_notice_based_on_last_post: "Este tópico fechará %{duration} depois da última resposta."
       auto_close_title: 'Configurações para fechar automaticamente'
       auto_close_save: "Salvar"
       auto_close_remove: "Não fechar automaticamente este tópico"
@@ -796,8 +789,8 @@ pt_BR:
           '2_4': 'Você receberá notificações porque postou uma resposta neste tópico.'
           '2_2': 'Você receberá notificações porque está monitorando este tópico.'
           '2': 'Você receberá notificações porque você <a href="/users/{{username}}/preferences">leu este tópico</a>.'
-          '1_2': 'Você receberá notificações apenas se alguém mencionar o seu @nome ou te responder.'
-          '1': 'Você receberá notificações apenas se alguém mencionar o seu @nome ou te responder.'
+          '1_2': 'Você será notificado se alguém mencionar o seu @nome ou responder à sua postagem.'
+          '1': 'Você será notificado se alguém mencionar o seu @nome ou responder à sua postagem.'
           '0_7': 'Você está ignorando todas as notificações nessa categoria.'
           '0_2': 'Você está ignorando todas as notificações deste tópico.'
           '0': 'Você está ignorando todas as notificações deste tópico.'
@@ -809,16 +802,16 @@ pt_BR:
           description: "Você será notificado de cada post novo neste tópico. Um contador de posts novos e não lidos também aparecerá próximo ao tópico."
         tracking_pm:
           title: "Monitorando"
-          description: "Uma contagem de respostas novas e não lidas aparecerá perto das mensagens privadas. Você será notificado se alguém mencionar seu @nome ou te responder."
+          description: "Um contador de postagens novas e não lidas aparecerá perto das mensagens privadas. Você será notificado se alguém mencionar seu @nome ou responder à sua postagem."
         tracking:
           title: "Monitorar"
-          description: "Um contador de posts novos e não lidos aparecerá próximo ao tópico. Você será notificado apenas se alguém mencionar seu @nome ou responder ao seu post."
+          description: "Um contador de postagens novas e não lidas aparecerá perto do tópico. Você será notificado se alguém mencionar seu @nome ou responder à sua postagem."
         regular:
           title: "Normal"
-          description: "Você será notificado apenas se alguém mencionar seu @nome ou te responder."
+          description: "Você será notificado se alguém mencionar seu @nome ou responder à sua postagem."
         regular_pm:
           title: "Regular"
-          description: "Você receberá notificações apenas se alguém mencionar o seu @nome ou responder a sua mensagem privada."
+          description: "Você será notificado se alguém mencionar seu @nome ou responder à sua postagem em mensagem privada."
         muted_pm:
           title: "Silenciado"
           description: "Você nunca será notificado de qualquer coisa sobre essa mensagem privada."
@@ -880,7 +873,6 @@ pt_BR:
         n_posts:
           one: "1 mensagem"
           other: "{{count}} mensagens"
-        cancel: "Mostrar novamente todas as mensagens deste tópico."
       split_topic:
         title: "Mover para novo tópico"
         action: "mover para novo tópico"
@@ -948,7 +940,7 @@ pt_BR:
         edit: "Desculpe, houve um erro ao editar sua resposta. Por favor, tente outra vez."
         upload: "Desculpe, houve um erro ao enviar esse arquivo. Por favor, tente outra vez."
         attachment_too_large: "Desculpe, o arquivo que você está tentando enviar é muito grande (o tamanho máximo permitido é {{max_size_kb}}kb)."
-        image_too_large: "Desculpe, o arquivo que você está tentando enviar é muito grande (o tamanho máximo é {{max_size_kb}}kb), por favor diminua-o e tente novamente."
+        file_too_large: "Desculpe, o arquivo que você está tentando enviar é muito grande (o tamanho máximo permitido é {{max_size_kb}}kb)."
         too_many_uploads: "Desculpe, você pode enviar apenas um arquivos por vez."
         upload_not_authorized: "Desculpe, o tipo de arquivo que você está tentando enviar não está autorizado (extensões autorizadas: {{authorized_extensions}})."
         image_upload_not_allowed_for_new_user: "Desculpe, novos usuário não podem enviar imagens."
@@ -1092,6 +1084,8 @@ pt_BR:
           previous: "Revisão anterior"
           next: "Próxima revisão"
           last: "Última revisão"
+          hide: "Esconder revisão"
+          show: "Exibir revisão"
           comparing_previous_to_current_out_of_total: "<strong>{{previous}}</strong> vs <strong>{{current}}</strong> / {{total}}"
         displays:
           inline:
@@ -1115,7 +1109,6 @@ pt_BR:
       general: 'Geral'
       settings: 'Configurações'
       delete: 'Apagar categoria'
-      create: 'Criar categoria'
       save: 'Salvar categoria'
       creation_error: Houve um erro durante a criação da categoria.
       save_error: Houve um erro ao salvar a categoria.
@@ -1161,29 +1154,27 @@ pt_BR:
           description: "Automaticamente monitora todos novos tópicos nestas categorias. Uma contagem de posts não lidos e novos aparecerá próximo ao tópico."
         regular:
           title: "Normal"
-          description: "Você receberá notificações apenas se alguém mencionar o seu @nome ou responder ao seu post."
+          description: "Você será notificado se alguém mencionar o seu @nome ou responder à sua postagem."
         muted:
           title: "Silenciar"
           description: "Você não será notificado sobre novos tópicos dessas categorias e eles não vão aparecer na guia de mensagens não lidas."
     flagging:
-      title: 'Por que você está sinalizando como privada esta mensagem?'
       action: 'Sinalizar resposta'
       take_action: "Tomar Atitude"
       notify_action: 'Mensagem privada'
       delete_spammer: "Apagar Spammer"
       delete_confirm: "Você está prestes a excluir <b>%{posts}</b> mensagens e <b>%{topics}</b> tópicos deste usuário, removendo a conta, bloqueando cadastro a partir do endereço IP <b>%{ip_address}</b> e adicionando o e-mail dele <b>%{email}</b> em uma lista de bloqueio permanente. Você tem certeza que este usuário é realmente um spammer?"
       yes_delete_spammer: "Sim, Apagar Spammer"
+      ip_address_missing: "(N/D)"
+      hidden_email_address: "(escondido)"
       submit_tooltip: "Enviar uma sinalização privada"
       take_action_tooltip: "Atingir o limiar de denuncias imediatamente, ao invés de esperar para mais denuncias da comunidade"
       cant: "Desculpe, não é possível colocar uma sinalização neste momento."
-      custom_placeholder_notify_user: "Porque esta resposta requer que você fale diretamente e privativamente com este usuário? Seja específico, construtivo e sempre gentil."
-      custom_placeholder_notify_moderators: "Porque esta resposta requer atenção do moderador? Diga especificamente como isto te preocupa e forneça links relevantes se possível."
       custom_message:
         at_least: "insira pelo menos {{n}} caracteres"
         more: "{{n}} em falta..."
         left: "{{n}} restantes"
     flagging_topic:
-      title: "Por que você está sinalizando privativamente este tópico?"
       action: "Sinalizar Tópico"
       notify_action: "Mensagem privada"
     topic_map:
@@ -1233,6 +1224,9 @@ pt_BR:
     category_title: "Categoria"
     history: "Histórico"
     changed_by: "por {{author}}"
+    raw_email:
+      title: "Email Raw"
+      not_available: "Não disponível!"
     categories_list: "Lista de categorias"
     filters:
       with_topics: "%{filter} tópicos"
@@ -1339,8 +1333,6 @@ pt_BR:
           7_days_ago: "7 Dias Atrás"
           30_days_ago: "30 Dias Atrás"
           all: "Tudo"
-          view_table: "Visualizar como Tabela"
-          view_chart: "Visualizar como Gráfico de Barras"
       commits:
         latest_changes: "Últimas atualizações: atualize com frequência!"
         by: "por"
@@ -1469,7 +1461,7 @@ pt_BR:
             text: "Backup"
             title: "Cria um backup"
             confirm: "Você quer iniciar um novo backup?"
-            without_uploads: "Sim (sem upload)"
+            without_uploads: "Sim (não inclua arquivos)"
           download:
             text: "Download"
             title: "Download do backup"
@@ -1496,9 +1488,6 @@ pt_BR:
         title: "Personalizar"
         long_title: "Personalizações do Site"
         header: "Cabeçalho"
-        css: "Stylesheet"
-        mobile_header: "Cabeçalho Mobile"
-        mobile_css: "Folha de Estilos Mobile"
         override_default: "Sobrepor padrão?"
         enabled: "Habilitado?"
         preview: "pré-visualização"
@@ -1560,6 +1549,9 @@ pt_BR:
           love:
             name: 'curtir'
             description: "A cor do botão curtir."
+          wiki:
+            name: 'wiki'
+            description: "Cor base usada para o fundo em postagens do wiki."
       email:
         title: "Email"
         settings: "Settings"
@@ -1578,7 +1570,6 @@ pt_BR:
         sent_test: "enviado!"
         delivery_method: "Delivery Method"
         preview_digest: "Preview Digest"
-        preview_digest_desc: "Esta é uma ferramenta para prever o conteúdo dos emails de resumo enviados a partir do seu forum."
         refresh: "Atualizar"
         format: "Formato"
         html: "html"
@@ -1602,6 +1593,8 @@ pt_BR:
         last_match_at: "Última Correspondência"
         match_count: "Resultados"
         ip_address: "IP"
+        topic_id: "ID Tópico"
+        post_id: "ID Mensagem"
         delete: 'Excluir'
         edit: 'Editar'
         save: 'Salvar'
@@ -1635,6 +1628,9 @@ pt_BR:
             unsuspend_user: "readmitir usuário"
             grant_badge: "conceder emblema"
             revoke_badge: "revogar emblema"
+            check_email: "checar email"
+            delete_topic: "apagar tópico"
+            delete_post: "apagar mensagem"
         screened_emails:
           title: "Emails Filtrados"
           description: "Quando alguém tenta cria uma nova conta, os seguintes endereços de email serão verificados e o registro será bloqueado, ou outra ação será executada."
@@ -1704,6 +1700,9 @@ pt_BR:
           one: "Falha ao rejeitar 1 usuário."
           other: "Falha ao rejeitar %{count} usuários."
         not_verified: "Não verificado"
+        check_email:
+          title: "Mostrar endereço de email deste usuário"
+          text: "Mostrar"
       user:
         suspend_failed: "Algo deu errado suspendendo este usuário {{error}}"
         unsuspend_failed: "Algo deu errado reativando este usuário {{error}}"
@@ -1786,6 +1785,10 @@ pt_BR:
         suspend_modal_title: "Usuário Suspenso"
         trust_level_2_users: "Usuários de Nível de Confiança 2"
         trust_level_3_requirements: "Requisitos do Nível de Confiança 3"
+        trust_level_locked_tip: "nível de confiança está travado, sistema não irá promover ou demover o usuário"
+        trust_level_unlocked_tip: "nível de confiança está destravado, sistema poderá promover ou demover o usuário"
+        lock_trust_level: "Travar Nível de Confiança"
+        unlock_trust_level: "Destravar Nível de Confiança"
         tl3_requirements:
           title: "Requisitos para o Nível de Confiança 3"
           table_title: "Nos últimos 100 dias:"
@@ -1802,8 +1805,15 @@ pt_BR:
           flagged_by_users: "Usuários que foram denunciados"
           likes_given: "Curtidas dados"
           likes_received: "Curtidas recebidos"
+          likes_received_days: "Curtidas recebidas: dias únicos"
+          likes_received_users: "Curtidas recebidas: usuários únicos"
           qualifies: "Qualificado para o nível 3 de confiança."
           does_not_qualify: "Não qualificado para o nível 3 de confiança."
+          will_be_promoted: "Será promovido em breve."
+          will_be_demoted: "Será demovido em breve."
+          on_grace_period: "Atualmente em período de aprovação da promoção, não será demovido."
+          locked_will_not_be_promoted: "Nível de confiança travado. Nunca será promovido."
+          locked_will_not_be_demoted: "Nível de confiança travado. Nunca será demovido."
         sso:
           title: "Único Login"
           external_id: "ID Externo"
@@ -1813,16 +1823,25 @@ pt_BR:
           external_avatar_url: "URL do Avatar"
       user_fields:
         title: "Campos de Usuários"
-        description: "Qualquer campo adicionado aqui será requerido dos usuários quando eles criarem uma conta."
+        help: "Adicionar campos que seus usuários podem preencher."
         create: "Criar Campo de Usuário"
         untitled: "Sem título"
         name: "Nome do Campo"
         type: "Tipo do Campo"
+        description: "Descrição do Campo"
         save: "Salvar"
         edit: "Editar"
         delete: "Apagar"
         cancel: "Cancelar"
         delete_confirm: "Tem certeza que quer apagar este campo de usuário?"
+        required:
+          title: "Necessário para cadastro?"
+          enabled: "necessário"
+          disabled: "não necessário"
+        editable:
+          title: "Editável após criar conta?"
+          enabled: "editável"
+          disabled: "não editável"
         field_types:
           text: 'Campo Texto'
           confirm: 'Confirmação'
@@ -1881,11 +1900,14 @@ pt_BR:
         grant: Conceder
         no_user_badges: "%{name} não teve nenhum emblema concedido."
         no_badges: Não há emblemas que podem ser concedidos.
+        none_selected: "Selecione um emblema para começar"
         allow_title: Permitir ao emblema ser usado como título
         multiple_grant: Pode ser concedido várias vezes
         listable: Mostrar emblema na página pública de emblemas
         enabled: Habilitar emblema
         icon: Ícone
+        image: Imagem
+        icon_help: "Use uma classe do Font Awesome ou uma URL de uma imagem"
         query: Badge Query (SQL)
         target_posts: Consultar respostas selecionadas
         auto_revoke: Rodar revocation query todo dia
@@ -1979,7 +2001,6 @@ pt_BR:
         one: "1 emblema concedido"
         other: "%{count} emblemas concedidos"
       select_badge_for_title: Selecione um emblema para usar como título
-      no_title: "<no title>"
       badge_grouping:
         getting_started:
           name: Começando

@@ -5,6 +5,36 @@ describe BadgeGranter do
   let(:badge) { Fabricate(:badge) }
   let(:user) { Fabricate(:user) }
 
+  describe 'revoke_titles' do
+    it 'can correctly revoke titles' do
+      badge = Fabricate(:badge, allow_title: true)
+      user = Fabricate(:user, title: badge.name)
+      user.reload
+
+      user.user_profile.update_column(:badge_granted_title, true)
+
+      BadgeGranter.grant(badge, user)
+      BadgeGranter.revoke_ungranted_titles!
+
+      user.reload
+      user.title.should == badge.name
+
+      badge.update_column(:allow_title, false)
+      BadgeGranter.revoke_ungranted_titles!
+
+      user.reload
+      user.title.should == ''
+
+      user.title = "CEO"
+      user.save
+
+      BadgeGranter.revoke_ungranted_titles!
+
+      user.reload
+      user.title.should == "CEO"
+    end
+  end
+
   describe 'preview' do
     it 'can correctly preview' do
       Fabricate(:user, email: 'sam@gmail.com')
@@ -162,7 +192,7 @@ describe BadgeGranter do
 
       UserBadge.where(user_id: user.id, badge_id: Badge::Editor).count.should eq(0)
 
-      PostRevisor.new(post).revise!(user, "This is my new test 1235 123")
+      PostRevisor.new(post).revise!(user, { raw: "This is my new test 1235 123" })
       BadgeGranter.process_queue!
 
       UserBadge.where(user_id: user.id, badge_id: Badge::Editor).count.should eq(1)

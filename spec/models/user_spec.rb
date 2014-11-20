@@ -179,7 +179,7 @@ describe User do
       expect(Post.where(id: @posts.map(&:id))).to be_empty
       @posts.each do |p|
         if p.post_number == 1
-          expect(Topic.find_by(id: p.topic_id)).should == nil
+          expect(Topic.find_by(id: p.topic_id)).to be_nil
         end
       end
     end
@@ -206,10 +206,13 @@ describe User do
     it { should be_valid }
     it { should_not be_admin }
     it { should_not be_approved }
-    its(:approved_at) { should be_blank }
-    its(:approved_by_id) { should be_blank }
-    its(:email_private_messages) { should == true }
-    its(:email_direct ) { should == true }
+
+    it "is properly initialized" do
+      subject.approved_at.should be_blank
+      subject.approved_by_id.should be_blank
+      subject.email_private_messages.should == true
+      subject.email_direct.should == true
+    end
 
     context 'digest emails' do
       it 'defaults to digests every week' do
@@ -230,11 +233,11 @@ describe User do
     end
 
     context 'after_save' do
-      before do
-        subject.save
-      end
+      before { subject.save }
 
-      its(:email_tokens) { should be_present }
+      it "has an email token" do
+        subject.email_tokens.should be_present
+      end
     end
 
     it "downcases email addresses" do
@@ -774,7 +777,7 @@ describe User do
       expect(found_user).to eq bob
 
       found_user = User.find_by_username_or_email('bob1')
-      expect(found_user).should == nil
+      expect(found_user).to be_nil
 
       found_user = User.find_by_email('bob@Example.com')
       expect(found_user).to eq bob
@@ -783,7 +786,7 @@ describe User do
       expect(found_user).to eq bob
 
       found_user = User.find_by_email('bob')
-      expect(found_user).should == nil
+      expect(found_user).to be_nil
 
       found_user = User.find_by_username('bOb')
       expect(found_user).to eq bob

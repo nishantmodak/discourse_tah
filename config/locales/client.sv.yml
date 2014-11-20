@@ -20,6 +20,16 @@ sv:
             mb: MB
             tb: TB
     dates:
+      time: "h:mm a"
+      long_no_year: "MMM D h:mm a"
+      long_no_year_no_time: "MMM D"
+      long_with_year: "D MMM, YYYY h:mm a"
+      long_with_year_no_time: "D MMM, YYYY"
+      long_date_with_year: "D MMM, 'YY LT"
+      long_date_without_year: "D MMM, LT"
+      long_date_with_year_without_time: "D MMM, 'YY"
+      long_date_without_year_with_linebreak: "D MMM <br/>LT"
+      long_date_with_year_with_linebreak: "D MMM, 'YY <br/>LT"
       tiny:
         half_a_minute: "< 1m"
         less_than_x_seconds:
@@ -49,6 +59,7 @@ sv:
         almost_x_years:
           one: "1å"
           other: "%{count}å"
+        date_month: "D MMM"
         date_year: "MMM 'YY"
       medium:
         x_minutes:
@@ -60,6 +71,7 @@ sv:
         x_days:
           one: "1 dag"
           other: "%{count} dagar"
+        date_year: "D MMM, 'YY"
       medium_with_ago:
         x_minutes:
           one: "1 min sedan"
@@ -91,6 +103,7 @@ sv:
     admin_title: "Admin"
     flags_title: "Flaggningar"
     show_more: "visa mer"
+    show_help: "hjälp"
     links: "Länkar"
     links_lowercase: "länkar"
     faq: "FAQ"
@@ -110,22 +123,9 @@ sv:
     daily: "dagligen"
     weekly: "veckovis"
     every_two_weeks: "varannan vecka"
-    max: "max"
     character_count:
       one: "{{count}} tecken"
       other: "{{count}} tecken"
-    in_n_seconds:
-      one: "om 1 sekund"
-      other: "om {{count}} sekunder"
-    in_n_minutes:
-      one: "om 1 minut"
-      other: "om {{count}} minuter"
-    in_n_hours:
-      one: "om 1 timme"
-      other: "om {{count}} timmar"
-    in_n_days:
-      one: "om 1 dag"
-      other: "om {{count}} dagar"
     suggested_topics:
       title: "Föreslagna trådar"
     about:
@@ -138,9 +138,8 @@ sv:
         all_time: "Alla dagar"
         last_7_days: "Senaste 7 dagarna"
       like_count: "Likes"
-      topic_count: "Antal diskussioner"
-      post_count: "Antal inlägg"
-      user_count: "Antal användare"
+      post_count: "Inlägg"
+      user_count: "Användare"
     bookmarks:
       not_logged_in: "förlåt, men du måste vara inloggad för att kunna bokmärka inlägg"
       created: "du har bokmärkt det här inlägget"
@@ -243,7 +242,6 @@ sv:
       location_not_found: (okänd)
       organisation: Organisation
       phone: Telefon
-      other_accounts: Andra konton med samma IP-adress
       no_other_accounts: (ingen)
     user:
       profile: "Profil"
@@ -259,6 +257,8 @@ sv:
       invited_by: "Inbjuden Av"
       trust_level: "Förtroendenivå"
       notifications: "Notifieringar"
+      dismiss_notifications: "Markera alla som lästa"
+      dismiss_notifications_tooltip: "Markera alla olästa aviseringar som lästa"
       disable_jump_reply: "Hoppa inte till ditt nya inlägg efter du svarat"
       dynamic_favicon: "Visa notifieringar om inkomna meddelanden på favicon (Experiment)"
       edit_history_public: "Låt andra användare se mina ändringar"
@@ -271,9 +271,12 @@ sv:
       admin_tooltip: "Den här användaren är administrator"
       suspended_notice: "Den här användaren är avstängd till {{date}}."
       suspended_reason: "Anledning:"
+      github_profile: "Github"
+      mailing_list_mode: "Skicka ett e-postmeddelande för varje nytt inlägg (gäller ej tystade ämnen eller kategorier)"
       watched_categories: "Tittade på"
       watched_categories_instructions: "Du kommer automatiskt att följa alla nya trådar inom dessa kategorier. Du kommer att få notifieringar om alla nya inlägg och trådar; antalet olästa och nya inlägg kommer även att visas vid sidan av trådens namn."
       tracked_categories: "Följd"
+      tracked_categories_instructions: "Du kommer automatiskt att följa alla nya trådar inom dessa kategorier. Antalet olästa och nya inlägg kommer att visas vid sidan av trådens namn."
       muted_categories: "Tystad"
       muted_categories_instructions: "Du kommer inte att få notifieringar om nya trådar inom dessa kategorier, och de kommer inte att visas under din \"oläst\"-tab."
       delete_account: "Ta bort mitt konto"
@@ -285,6 +288,7 @@ sv:
         flagged_posts: "flaggade inlägg"
         deleted_posts: "borttagna inlägg"
         suspensions: "avstängningar"
+        warnings_received: "varningar"
       messages:
         all: "Alla"
         mine: "Mina"
@@ -320,9 +324,10 @@ sv:
         image_is_not_a_square: "Varning: vi har beskurit din bild; den är inte kvadratisk."
       change_profile_background:
         title: "Profilbakgrund"
+        instructions: "Bakgrunderna är centrerade och har en förinställd bredd på 850px"
       email:
         title: "E-post"
-        ok: "Ser bra ut. Vi kommer maila dig för att bekräfta."
+        instructions: "Visas aldrig publikt"
         invalid: "Vad god ange en giltig e-postadress."
         authenticated: "Din e-post har autentiserats av {{provider}}."
         frequency: "Vi kommer bara maila dig om vi inte har sett dig nyligen och du inte redan sett det vi mailar dig om."
@@ -332,6 +337,7 @@ sv:
         ok: "Ditt namn ser bra ut."
       username:
         title: "Användarnamn"
+        instructions: "Måste vara unikt, kort och utan mellanslag."
         short_instructions: "Personer kan omnämna dig som @{{username}}."
         available: "Ditt användarnamn är tillgängligt."
         global_match: "E-posten matchar det registrerade användarnamnet."
@@ -398,6 +404,8 @@ sv:
         expired: "Denna inbjudan har gått ut."
         rescind: "Ta bort"
         rescinded: "Inbjudan borttagen"
+        reinvite: "Skicka inbjudan igen"
+        reinvited: "Inbjudan skickad"
         time_read: "Lästid"
         days_visited: "Dagar Besökta"
         account_age_days: "Kontoålder i dagar"
@@ -405,6 +413,7 @@ sv:
         bulk_invite:
           none: "Du har inte skickat några inbjudningar. Du kan skicka individuella inbjudningar, eller så kan du bjuda in flera på en gång genom att <a href='https://meta.discourse.org/t/send-bulk-invites/16468'>ladda upp en bulkfil.</a>"
           text: "Massinbjudan från fil"
+          uploading: "Laddar upp..."
           success: "Uppladdning av filen lyckades"
           error: "Det blev ett fel vid uppladdning av '{{filename}}': {{message}}"
       password:
@@ -412,6 +421,8 @@ sv:
         too_short: "Ditt lösenord är för kort."
         common: "Det lösenordet är för vanligt."
         ok: "Ditt lösenord ser bra ut."
+        instructions: "Måste vara minst %{count} tecken lång."
+      associated_accounts: "Kopplade konton"
       ip_address:
         title: "Senaste IP-adress"
       registration_ip_address:
@@ -439,6 +450,7 @@ sv:
         network: "Vänligen kontrollera din uppkoppling."
         network_fixed: "Ser ut som att den är tillbaka."
         server: "Felmeddelande: {{status}}"
+        forbidden: "Du har inte rättigheter att läsa detta"
         unknown: "Något gick fel."
       buttons:
         back: "Gå tillbaka"
@@ -463,6 +475,7 @@ sv:
     last_post: Sista inlägget
     last_post_lowercase: senaste inlägg
     summary:
+      enabled_description: "Sammanfattning över de inlägg som användarna tycker är mest intressanta."
       description: "Det finns <b>{{count}}</b> svar."
       description_time: "Det finns <b>{{count}}</b> svar med en uppskattad lästid på <b>{{readingTime}} minuter</b>."
       enable: 'Sammanfatta denna tråd'
@@ -508,6 +521,7 @@ sv:
       awaiting_approval: "Ditt konto har inte godkänts av en moderator än. Du kommer att få ett mail när det är godkänt."
       requires_invite: "Tyvärr, inbjudan krävs för tillgång till detta forum."
       not_activated: "Du kan inte logga in än. Vi har tidigare skickat ett aktiveringsmail till dig via <b>{{sentTo}}</b>. Var god följ instruktionerna i det mailet för att aktivera ditt konto."
+      not_allowed_from_ip_address: "Du kan inte logga in från den IP-adressen"
       resend_activation_email: "Klicka här för att skicka aktiveringsmailet igen."
       sent_activation_email_again: "Vi har skickat ännu ett aktiveringsmail till dig via <b>{{currentEmail}}</b>. Det kan ta ett par minuter för det att komma fram; var noga med att kolla din skräppost."
       google:
@@ -529,6 +543,7 @@ sv:
         title: "med GitHub"
         message: "Autentiserar med GitHub (kolla så att pop up-blockare inte är aktiverade)"
     composer:
+      add_warning: "Det här är en officiell varning"
       posting_not_on_topic: "Du svarar på tråden \"{{title}}\", men du besöker just nu en annan tråd."
       saving_draft_tip: "sparar"
       saved_draft_tip: "sparat"
@@ -537,7 +552,7 @@ sv:
       drafts_offline: "utkast offline"
       min_length:
         need_more_for_title: "{{n}} tecken kvar för titeln"
-        need_more_for_reply: "{{n}} tecken kvar för svaret"
+        need_more_for_reply: "{{n}} fler..."
       error:
         title_missing: "Du måste ange en rubrik"
         title_too_short: "Titeln måste vara minst {{min}} tecken lång."
@@ -550,8 +565,6 @@ sv:
       reply_here: "Svara Här"
       reply: "Svara"
       cancel: "Avbryt"
-      create_topic: "Skapa Tråd"
-      create_pm: "Skapa Privat Meddelande"
       title: "eller tryck Ctrl+Enter"
       users_placeholder: "Lägg till en användare"
       title_placeholder: "Vad handlar denna diskussion om i en kort mening?"
@@ -561,7 +574,6 @@ sv:
       view_new_post: "Visa ditt nya inlägg."
       saving: "Sparar..."
       saved: "Sparat!"
-      saved_draft: "Du har ett pågående inläggsutkast. Välj denna stapel för att fortsätta redigera."
       uploading: "Laddar upp..."
       show_preview: 'visa förhandsgranskning &raquo;'
       hide_preview: '&laquo; dölj förhandsgranskning'
@@ -590,10 +602,9 @@ sv:
       help: "Markdown Redigeringshjälp"
       toggler: "Dölj eller visa composer-panelen"
       admin_options_title: "Valfria personalinställningar för den här tråden"
-      auto_close_label: "Tid för att automatiskt stänga tråden:"
-      auto_close_units: "(# timmar, en tid, eller en timestamp)"
-      auto_close_examples: 'Ange en absolut tid eller antal timmar — 24, 17:00, 2013-11-22 14:00'
-      auto_close_error: "Vänligen ange ett giltigt värde."
+      auto_close:
+        label: "Stäng automatiskt tråden efter:"
+        error: "Vänligen ange ett giltigt värde."
     notifications:
       title: "notifikationer med omnämnanden av @namn, svar på dina inlägg och trådar, privata meddelanden, etc"
       none: "Du har inte notifikationer just nu."
@@ -616,10 +627,7 @@ sv:
       title_with_attachments: "Lägg till en bild eller en fil"
       from_my_computer: "Från min enhet"
       from_the_web: "Från webben"
-      remote_tip: "länk till bild http://example.com/image.jpg"
-      remote_tip_with_attachments: "länk till bild eller fil http://example.com/file.ext (tillåtna filtyper: {{authorized_extensions}})."
       local_tip: "klicka för att välja en bild från din enhet."
-      local_tip_with_attachments: "klicka för att välja en bild eller fil från din enhet (tillåtna filtyper: {{authorized_extensions}})"
       hint: "(du kan också dra & släppa in i redigeraren för att ladda upp dem)"
       hint_for_supported_browsers: "(du kan också dra och släppa eller klistra in bilder i redigeraren för att ladda upp dem)"
       uploading: "Laddar upp bild"
@@ -654,11 +662,13 @@ sv:
         actions: "Massändringar"
         change_category: "Ändra kategori"
         close_topics: "Stäng trådar"
+        archive_topics: "Arkivera trådar"
         notification_level: "ändra notifieringsnivå"
         selected:
           one: "Du har markerat <b>1</b> diskussion."
           other: "Du har markerat <b>{{count}}</b> diskussioner."
       none:
+        starred: "Det finns inga fler stjärnmärkta trådar."
         unread: "Du har inga olästa trådar att läsa."
         new: "Du har inga nya trådar att läsa."
         read: "Du har inte läst några trådar än."
@@ -679,7 +689,6 @@ sv:
         top: "Det finns inga fler topptrådar."
     topic:
       filter_to: "{{post_count}} inlägg i tråd"
-      create: 'Skapa Tråd'
       create_long: 'Skapa en nytt Tråd'
       private_message: 'Starta en privat konversation'
       list: 'Trådar'
@@ -692,7 +701,6 @@ sv:
         one: '1 oläst tråd'
         other: '{{count}} olästa trådar'
       title: 'Tråd'
-      loading_more: "Laddar fler Trådar..."
       loading: 'Laddar tråd...'
       invalid_access:
         title: "Tråden är privat"
@@ -730,6 +738,7 @@ sv:
       jump_reply_down: hoppa till senare svar
       deleted: "Tråden har raderats"
       auto_close_notice: "Den här tråden kommer att stängas automatiskt %{timeLeft}."
+      auto_close_notice_based_on_last_post: "Ämnet stängs %{duration} efter sista svaret."
       auto_close_title: 'Stäng Inställningar automatiskt'
       auto_close_save: "Spara"
       auto_close_remove: "Stäng inte den här tråden automatiskt"
@@ -753,8 +762,6 @@ sv:
           '2_4': 'Du kommer ta emot notifikationer för att du postade ett svar till denna tråd.'
           '2_2': 'Du kommer ta emot notifikationer för att du följer denna tråd.'
           '2': 'Du kommer ta emot notifikationer för att du <a href="/users/{{username}}/preferences">läser denna tråd</a>.'
-          '1_2': 'Du kommer bara meddelandes om någon nämner ditt @namn eller svara på dina inlägg.'
-          '1': 'Du kommer bara meddelandes om någon nämner ditt @namn eller svara på dina inlägg.'
           '0_7': 'Du ignorerar alla notifikationer i den här kategorin.'
           '0_2': 'Du ignorerar alla notifikationer för denna tråd.'
           '0': 'Du ignorerar alla notifikationer för denna tråd.'
@@ -764,15 +771,12 @@ sv:
           title: "Kollar"
         tracking_pm:
           title: "bevakade"
-          description: "Antal olästa och nya inlägg kommer visas bredvid det privata meddelandet. Du kommer enbart notifieras om någon nämner ditt @namn eller svarar på ditt inlägg."
         tracking:
           title: "Följer"
         regular:
           title: "Vanlig"
-          description: "Du kommer endast att få notifieringar om någon nämner ditt @namn eller svarar på ditt inlägg."
         regular_pm:
           title: "Vanlig(t)"
-          description: "Du kommer bara notifieras om någon nämner ditt @namn eller svarar på ditt inlägg i det privata meddelandet."
         muted_pm:
           title: "tystade"
           description: "Du kommer aldrig att få notifieringar om något angående detta privatmeddelande."
@@ -832,7 +836,6 @@ sv:
         n_posts:
           one: "1 inlägg"
           other: "{{count}} inlägg"
-        cancel: "Visa alla inlägg i den här tråden igen."
       split_topic:
         title: "Flytta till nyn tråd"
         action: "flytta till ny tråd"
@@ -878,6 +881,7 @@ sv:
       post_number: "inlägg {{number}}"
       in_reply_to: "svara till"
       last_edited_on: "inlägg senast ändrat den"
+      reply_as_new_topic: "Svara i ny tråd"
       continue_discussion: "Fortsätter diskussionen från {{postLink}}:"
       follow_quote: "gå till det citerade inlägget"
       show_full: "Via hela inlägget"
@@ -899,7 +903,6 @@ sv:
         edit: "Tyvärr, det uppstod ett fel under ändringen av ditt inlägg. Var god försök igen."
         upload: "Tyvärr, det uppstod ett fel under uppladdandet av den filen. Vad god försök igen."
         attachment_too_large: "Tyvärr, filen du försöker ladda upp är för stor (maximal storlek är {{max_size_kb}} kb)."
-        image_too_large: "Tyvärr, filen som du försöker ladda upp är för stor (maxstorlek är {{max_size_kb}}kb), var god ändra storlek och försök igen."
         too_many_uploads: "Tyvärr, du kan bara ladda upp en bild i taget."
         upload_not_authorized: "Tyvärr, filen du försökte ladda upp är inte tillåten (tillåtna filtyper: {{authorized_extensions}})."
         image_upload_not_allowed_for_new_user: "Tyvärr, nya användare kan inte ladda upp bilder."
@@ -913,8 +916,10 @@ sv:
       controls:
         reply: "börja komponera ett svar till detta inlägg"
         like: "gilla detta inlägg"
+        has_liked: "du har gillat detta inlägg"
         undo_like: "ångra like"
         edit: "ändra detta inlägg"
+        edit_anonymous: "Tyvärr, du måste vara inloggad för att kunna redigera det här inlägget."
         flag: "flagga detta inlägg för uppmärksamhet privat eller skicka en privat påminnelse om det"
         delete: "radera detta inlägg"
         undelete: "återställ detta inlägg"
@@ -926,6 +931,11 @@ sv:
             other: "Vill du radera de {{count}} direkta svaren på det här inlägget också?"
           yes_value: "Ja, radera även svaren"
           no_value: "Nej, bara det här inlägget"
+        wiki: "Skapa wiki"
+        unwiki: "Ta bort wiki"
+        convert_to_moderator: "Lägg till "
+        rebake: "Generera HTML"
+        unhide: "Visa"
       actions:
         flag: 'Flaga'
         it_too:
@@ -1024,6 +1034,8 @@ sv:
           previous: "Föregående revision"
           next: "Nästa revision"
           last: "Senaste revisionen"
+          hide: "Göm version"
+          show: "Visa version"
           comparing_previous_to_current_out_of_total: "<strong>{{previous}}</strong> vs <strong>{{current}}</strong> / {{total}}"
         displays:
           inline:
@@ -1032,6 +1044,8 @@ sv:
           side_by_side:
             title: "Visa diffar för resultat sida vid sida"
             button: '<i class="fa fa-columns"></i> HTML'
+          side_by_side_markdown:
+            title: "Visa "
         details:
           edited_by: "Ändrad av"
     category:
@@ -1044,7 +1058,6 @@ sv:
       general: 'Allmänt'
       settings: 'Inställningar'
       delete: 'Radera Kategori'
-      create: 'Skapa Kategori'
       save: 'Spara kategori'
       creation_error: Det uppstod ett fel när kategorin skulle skapas.
       save_error: Ett fel inträffade då kategorin skulle sparas.
@@ -1074,8 +1087,9 @@ sv:
       notifications:
         tracking:
           title: "Följer"
+        muted:
+          title: "Tystad"
     flagging:
-      title: 'Varför flaggar du detta inlägg privat?'
       action: 'Flagga Inlägg'
       take_action: "Åtgärda"
       notify_action: 'Privat meddelande'
@@ -1083,14 +1097,11 @@ sv:
       delete_confirm: "Du håller på att radera <b>%{posts}</b> inlägg och <b>%{topics}</b> trådar från den här användaren, radera hans/hennes konto, blockera IP-adressen <b>%{ip_address}</b>, och lägga till email-adressen <b>%{email}</b> till en permanent blockeringslista. Är du säker på att den här användaren verkligen är en spammare?"
       yes_delete_spammer: "Ja, radera spammare"
       cant: "Tyvärr, du kan inte flagga detta inlägg just nu."
-      custom_placeholder_notify_user: "Varför gör det här inlägget att du behöver tala direkt och privat med den här användaren? Var specifik, var konstruktiv, och var alltid vänlig."
-      custom_placeholder_notify_moderators: "Varför kräver detta inlägg uppmärksamhet från en moderator? Låt oss veta specifikt vad det gäller, med relevanta länkar där det är möjligt."
       custom_message:
         at_least: "skriv åtminstone {{n}} tecken"
         more: "{{n}} fler..."
         left: "{{n}} kvar"
     flagging_topic:
-      title: "Varför flaggar du privat denna tråd?"
       action: "Flagga tråd"
       notify_action: "Privatmeddelande"
     topic_map:
@@ -1210,8 +1221,6 @@ sv:
           7_days_ago: "7 dagar sedan"
           30_days_ago: "30 dagar sedan"
           all: "Alla"
-          view_table: "Visa som tabell"
-          view_chart: "Visa som stapeldiagram"
       commits:
         latest_changes: "Senaste ändringarna: snälla uppdatera ofta!"
         by: "av"
@@ -1305,9 +1314,6 @@ sv:
         title: "Anpassa"
         long_title: "Sidanpassningar"
         header: "Sidhuvud"
-        css: "Stilmall"
-        mobile_header: "Mobil-header"
-        mobile_css: "Mobil-stylesheet"
         override_default: "Skriv över standard?"
         enabled: "Aktiverad?"
         preview: "förhandsgranska"
@@ -1332,7 +1338,6 @@ sv:
         sent_test: "skickat!"
         delivery_method: "Leveransmetod"
         preview_digest: "Sammandrag"
-        preview_digest_desc: "Detta är ett verktyg för att förhandsgranska innehållet i email-sammandragen som skickas från ditt forum."
         refresh: "Uppdatera"
         format: "Format"
         html: "html"
@@ -1600,6 +1605,7 @@ sv:
         delete: '<b>d</b> radera inlägg'
         mark_tracking: '<b>m</b>, <b>t</b> Följd diskussion'
     badges:
+      title: Utmärkelser
       badge:
         welcome:
           name: Välkommen

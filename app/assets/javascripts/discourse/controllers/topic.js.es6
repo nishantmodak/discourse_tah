@@ -1,21 +1,33 @@
 import ObjectController from 'discourse/controllers/object';
+import { spinnerHTML } from 'discourse/helpers/loading-spinner';
 
 export default ObjectController.extend(Discourse.SelectedPostsCount, {
   multiSelect: false,
-  needs: ['header', 'modal', 'composer', 'quote-button', 'search', 'topic-progress'],
+  needs: ['header', 'modal', 'composer', 'quote-button', 'search', 'topic-progress', 'application'],
   allPostsSelected: false,
   editingTopic: false,
   selectedPosts: null,
   selectedReplies: null,
   queryParams: ['filter', 'username_filters', 'show_deleted'],
+  searchHighlight: null,
 
   maxTitleLength: Discourse.computed.setting('max_topic_title_length'),
 
-  contextChanged: function(){
+  contextChanged: function() {
     this.set('controllers.search.searchContext', this.get('model.searchContext'));
   }.observes('topic'),
 
-  termChanged: function(){
+  _titleChanged: function() {
+    var title = this.get('title');
+    if (!Em.empty(title)) {
+
+      // Note normally you don't have to trigger this, but topic titles can be updated
+      // and are sometimes lazily loaded.
+      this.send('refreshTitle');
+    }
+  }.observes('title', 'category'),
+
+  termChanged: function() {
     var dropdown = this.get('controllers.header.visibleDropdown');
     var term = this.get('controllers.search.term');
 
@@ -29,14 +41,35 @@ export default ObjectController.extend(Discourse.SelectedPostsCount, {
 
   }.observes('controllers.search.term', 'controllers.header.visibleDropdown'),
 
-  filter: function(key, value) {
+  show_deleted: function(key, value) {
+    var postStream = this.get('postStream');
+    if (!postStream) { return; }
+
     if (arguments.length > 1) {
-      this.set('postStream.summary', value === "summary");
+      postStream.set('show_deleted', value);
     }
-    return this.get('postStream.summary') ? "summary" : null;
+    return postStream.get('show_deleted') ? true : undefined;
   }.property('postStream.summary'),
 
-  username_filters: Discourse.computed.queryAlias('postStream.streamFilters.username_filters'),
+  filter: function(key, value) {
+    var postStream = this.get('postStream');
+    if (!postStream) { return; }
+
+    if (arguments.length > 1) {
+      postStream.set('summary', value === "summary");
+    }
+    return postStream.get('summary') ? "summary" : undefined;
+  }.property('postStream.summary'),
+
+  username_filters: function(key, value) {
+    var postStream = this.get('postStream');
+    if (!postStream) { return; }
+
+    if (arguments.length > 1) {
+      postStream.set('streamFilters.username_filters', value);
+    }
+    return postStream.get('streamFilters.username_filters');
+  }.property('postStream.streamFilters.username_filters'),
 
   init: function() {
     this._super();
@@ -336,6 +369,11 @@ export default ObjectController.extend(Discourse.SelectedPostsCount, {
       this.get('content').clearPin();
     },
 
+    togglePinnedForUser: function() {
+      if (this.get('pinned_at'))
+        this.get('pinned') ? this.get('content').clearPin() : this.get('content').rePin();
+    },
+
     replyAsNewTopic: function(post) {
       var composerController = this.get('controllers.composer'),
           quoteController = this.get('controllers.quote-button'),
@@ -404,6 +442,10 @@ export default ObjectController.extend(Discourse.SelectedPostsCount, {
     }
   },
 
+  togglePinnedState: function() {
+    this.send('togglePinnedForUser');
+  },
+
   showExpandButton: function() {
     var post = this.get('post');
     return post.get('post_number') === 1 && post.get('topic.expandable_first_post');
@@ -453,6 +495,7 @@ export default ObjectController.extend(Discourse.SelectedPostsCount, {
   }.property('selectedPostsCount'),
 
   hasError: Ember.computed.or('notFoundHtml', 'message'),
+  noErrorYet: Ember.computed.not('hasError'),
 
   multiSelectChanged: function() {
     // Deselect all posts when multi select is turned off
@@ -486,7 +529,7 @@ export default ObjectController.extend(Discourse.SelectedPostsCount, {
   }.property('isPrivateMessage'),
 
   loadingHTML: function() {
-    return "<div class='spinner'></div>";
+    return spinnerHTML;
   }.property(),
 
   recoverTopic: function() {
@@ -654,6 +697,10 @@ export default ObjectController.extend(Discourse.SelectedPostsCount, {
     if (lastLoadedPost && lastLoadedPost === post) {
       postStream.appendMore();
     }
-  }
+  },
+
+  _showFooter: function() {
+    this.set("controllers.application.showFooter", this.get("postStream.loadedAllPosts"));
+  }.observes("postStream.loadedAllPosts")
 
 });
