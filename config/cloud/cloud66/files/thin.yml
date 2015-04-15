@@ -1,4 +1,4 @@
-address: http://discuss.tah.io
+address: localhost
 port: 3000
 timeout: 30
 pid: /tmp/web_server.pid
